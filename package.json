@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Giggles Backend",
+  "repository": "git@github.com:superseriouscompany/giggles.superserious.co.git",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "mocha",
+    "dev": "nodemon"
+  },
+  "author": "Neil Sarkar, Super Serious Company",
+  "license": "MIT",
+  "dependencies": {
+    "aac-duration": "0.0.1",
+    "express": "^4.14.0",
+    "iap_verifier": "0.0.12",
+    "multer": "^1.2.0",
+    "node-uuid": "^1.4.7"
+  },
+  "devDependencies": {
+    "mocha": "^3.1.0",
+    "nodemon": "^1.11.0",
+    "request": "^2.75.0"
+  }
+}

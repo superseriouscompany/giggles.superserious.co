@@ -12,6 +12,10 @@ const app         = express();
 const port        = process.env.PORT || 3000;
 const iapClient   = new IAPVerifier();
 
+const baseUrl     = process.env.NODE_ENV == 'production' ?
+  'https://giggles.superserious.co' :
+  'https://superserious.ngrok.io';
+
 let captionStorage = multer.diskStorage({
   destination: 'captions/',
   filename: function(req, file, cb) {
@@ -57,7 +61,7 @@ app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
       filename: req.file.filename,
       width: dimensions.width,
       height: dimensions.height,
-      image_url: `https://superserious.ngrok.io/${req.file.filename}`,
+      image_url: `${baseUrl}/${req.file.filename}`,
     })
     res.status(201).json({id: uuid, queueSize: queue.length});
   }
@@ -129,6 +133,7 @@ app.post('/submissions/:id/captions', captionUpload.single('audio'), function(re
       filename: req.file.filename,
       submission_id: req.params.id,
       duration: duration,
+      audio_url: `${baseUrl}/${req.file.filename}`,
     })
   }
   res.status(201).json({id: uuid});

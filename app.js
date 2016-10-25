@@ -89,7 +89,7 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
       return res.status(403).json({error: msg});
     }
 
-    if( !payload.receipt.in_app || payload.receipt.in_app[0].product_id != 'com.superserious.steffigraffiti.gonext' ) {
+    if( !payload.receipt.in_app || payload.receipt.in_app[0].product_id != 'com.superserious.giggles.now' ) {
       console.warn(payload);
       return res.status(403).json({error: "You have not purchased a pass to skip the line"});
     }

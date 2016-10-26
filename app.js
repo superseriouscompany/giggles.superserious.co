@@ -105,6 +105,10 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
   })
 })
 
+app.post('/submissions/:id/report', function(req, res) {
+  res.sendStatus(204);
+})
+
 app.get('/submissions', function(req, res) {
   res.json({
     submissions: submissions

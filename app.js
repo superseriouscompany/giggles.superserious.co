@@ -128,9 +128,15 @@ app.get('/submissions/:id/captions', function(req, res) {
 })
 
 app.post('/submissions/:id/captions', captionUpload.single('audio'), function(req, res) {
-  const duration = aacDuration(`./captions/${req.file.filename}`);
-
   const uuid = UUID.v1();
+
+  let duration = 42;
+  try {
+    duration = aacDuration(`./captions/${req.file.filename}`);
+  } catch(err) {
+    console.error(err, "unable to convert", uuid);
+  }
+
   if( req.file && req.file.filename ) {
     captions.unshift({
       id: uuid,

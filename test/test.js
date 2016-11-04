@@ -2,7 +2,9 @@ const request = require('request-promise'),
       fs = require('fs'),
       expect  = require('expect');
 
-const baseUrl = 'https://superserious.ngrok.io';
+const baseUrl = process.env.NODE_ENV == 'production' ?
+  'https://giggles.superserious.co' :
+  'http://localhost:3000';
 
 const api = request.defaults({
   baseUrl: baseUrl,
@@ -22,14 +24,14 @@ describe("giggles api", function () {
     it("415s if form contains no multipart upload", function () {
       return api.post('/submissions', { submission: {cool: 'nice'}}).then(shouldFail).catch(function(err) {
         expect(err.statusCode).toEqual(415);
-        expect(err.response.body.message).toEqual("Your `Content-Type` must be `multipart/form-data`");
+        expect(err.response.body.message).toEqual("Your `Content-Type` must be `multipart/form-data`.");
       });
     });
 
     it("400s if no file is present", function () {
-      return api.post('/submissions').then(shouldFail).catch(function(err) {
+      return api.post({ url: '/submissions', formData: {nope: 'nothing'}}).then(shouldFail).catch(function(err) {
         expect(err.statusCode).toEqual(400);
-        expect(err.body.message).toEqual("You must provide a `file`");
+        expect(err.response.body.message).toEqual("You must attach a valid photo in the `file` field of your multipart request.");
       });
     });
 

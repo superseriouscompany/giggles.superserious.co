@@ -53,13 +53,20 @@ app.get('/', function(req, res) {
 
 app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
   const uuid = UUID.v1();
+
   if( !req.file || !req.file.filename ) {
-    return res.status(415).json({
-      message: "Your `Content-Type` must be `multipart/form-data`"
-    })
+    const contentType = req.get('Content-Type');
+    if( !contentType || !contentType.match(/multipart\/form-data/i) ) {
+      return res.status(415).json({
+        message: "Your `Content-Type` must be `multipart/form-data`."
+      });
+    }
+
+    return res.status(400).json({
+      message: "You must attach a valid photo in the `file` field of your multipart request."
+    });
   }
 
-  console.log(uuid);
   const dimensions = sizeOf(`./submissions/${req.file.filename}`);
 
   queue.push({

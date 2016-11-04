@@ -53,18 +53,23 @@ app.get('/', function(req, res) {
 
 app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
   const uuid = UUID.v1();
-  if( req.file && req.file.filename ) {
-    const dimensions = sizeOf(`./submissions/${req.file.filename}`);
-
-    queue.push({
-      id: uuid,
-      filename: req.file.filename,
-      width: dimensions.width,
-      height: dimensions.height,
-      image_url: `${baseUrl}/${req.file.filename}`,
+  if( !req.file || !req.file.filename ) {
+    return res.status(415).json({
+      message: "Your `Content-Type` must be `multipart/form-data`"
     })
-    res.status(201).json({id: uuid, queueSize: queue.length});
   }
+
+  console.log(uuid);
+  const dimensions = sizeOf(`./submissions/${req.file.filename}`);
+
+  queue.push({
+    id: uuid,
+    filename: req.file.filename,
+    width: dimensions.width,
+    height: dimensions.height,
+    image_url: `${baseUrl}/${req.file.filename}`,
+  })
+  res.status(201).json({id: uuid, queueSize: queue.length});
 })
 
 app.post('/next', function(req,res) {

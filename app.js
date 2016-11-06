@@ -7,6 +7,7 @@ const sizeOf      = require('image-size');
 const IAPVerifier = require('iap_verifier');
 const bodyParser  = require('body-parser');
 const aacDuration = require('aac-duration');
+const request     = require('request-promise');
 
 const app         = express();
 const port        = process.env.PORT || 3000;
@@ -117,6 +118,43 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
   })
 })
 
+app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
+  const purchaseToken = req.body.purchaseToken;
+  const bundleId      = 'com.superserious.giggles';
+  const productId     = 'com.superserious.giggles.now';
+
+  console.log("Bout to get a new token");
+  request.post('https://accounts.google.com/o/oauth2/token', {
+    form: {
+      grant_type: 'refresh_token',
+      client_id: '404145724987-sj8luhbbehlnls7in58n5t9fdpl6n6qu.apps.googleusercontent.com',
+      client_secret: 'w-NPd4WDoSXGV_oIyGdr31eI',
+      refresh_token: '1/_1pmxC4tVeTclcsCNyBUsPaWHYTefGgAdt1xalQ1xqU',
+    },
+    json: true,
+  }).then(function(body) {
+    const accessToken = body.access_token;
+    console.log("Got token", accessToken);
+    console.log("Purchase token", purchaseToken);
+    return request(`https://www.googleapis.com/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`, {json: true});
+  }).then(function(body) {
+    console.log(body);
+    if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
+    if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
+
+    for( var i = 0; i < queue.length; i++ ) {
+      if( queue[i].id == req.params.id ) {
+        choose(i);
+        return res.sendStatus(204);
+      }
+    }
+
+    return res.status(410).json({message: "Your purchase was valid, but we couldn't find your photo. Let us know at support@superserious.co"});
+  }).catch(function(err) {
+    next(err);
+  })
+})
+
 app.post('/submissions/:id/report', function(req, res) {
   res.sendStatus(204);
 })
@@ -181,6 +219,11 @@ app.get('/kill', function(req, res) {
   res.json({
     kill: false
   })
+})
+
+app.use(function(err, req, res, next) {
+  console.error(err, err.stack);
+  res.status(500).json({message: 'Something went wrong.'});
 })
 
 app.listen(port, function() {

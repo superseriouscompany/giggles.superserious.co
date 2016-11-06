@@ -1,3 +1,5 @@
+'use strict';
+
 const request = require('request-promise'),
       fs = require('fs'),
       expect  = require('expect');
@@ -35,9 +37,11 @@ describe("giggles api", function () {
       });
     });
 
+    it("413s if file is too large");
+
     it("allows uploading a valid submission and creates a uuid", function () {
       const formData = {
-        photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg')
+        photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg'),
       };
 
       return api.post({ url: '/submissions', formData: formData }).then(function(r) {
@@ -45,8 +49,79 @@ describe("giggles api", function () {
         expect(r.body.id).toExist();
       })
     });
-  })
+  });
+
+  describe("caption", function() {
+    let submission;
+
+    before(function() {
+      return factory.submission().then(function(s) {
+        submission = s;
+      })
+    })
+
+    it("415s if form is not multipart upload");
+
+    it("400s if file is not present");
+
+    it("413s if file is too large");
+
+    it("400s if submission id doesn't exist");
+
+    it("allows uploading a valid caption and creates a uuid", function() {
+      return factory.submission().then(function(s) {
+        const formData = {
+          audio: fs.createReadStream(__dirname + '/../fixtures/lawng.aac'),
+        }
+
+        return api.post({
+          url: `/submissions/${submission.id}/captions`,
+          formData: formData
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(201);
+          expect(r.body.id).toExist();
+        });
+      });
+    });
+  });
 });
+
+const factory = {
+  submission: function(params) {
+    params = Object.assign({
+      photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg'),
+    }, params);
+
+    const formData = {
+      photo: params.photo,
+    }
+
+    return api.post({url: '/submissions', formData: formData}).then(function(s) {
+      return s.body;
+    })
+  },
+
+  caption: function(params) {
+    // TODO: allow adding caption to existing submission
+    params = Object.assign({
+      audio: fs.createReadStream(`${__dirname}/../fixtures/lawng.aac`),
+    }, params)
+
+    return factory.submission().then(function(s) {
+      const formData = {
+        audio: params.audio
+      }
+
+      return api.post({
+        url: `/submissions/${submission.id}/captions`,
+        formData: formData
+      }).then(function(r) {
+        expect(r.statusCode).toEqual(201);
+        expect(r.body.id).toExist();
+      });
+    });
+  }
+}
 
 function shouldFail(r) {
   throw `Expected an unsuccessful response, but got ${r.statusCode}: ${r.body}`;

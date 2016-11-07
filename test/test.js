@@ -133,7 +133,15 @@ describe("giggles api", function () {
         })
       })
 
-      it("is reflected on caption");
+      it("is reflected on caption", function() {
+        api.post(`/captions/${caption.id}/like`).then(function(r) {
+          return api.get('/captions').then(function(r) {
+            return r.body.captions.find(function(c) { return c.id == caption.id; })
+          });
+        }).then(function(c) {
+          expect(c.likes).toEqual(2);
+        })
+      });
     })
 
     describe("hates", function() {
@@ -150,7 +158,15 @@ describe("giggles api", function () {
         })
       })
 
-      it("is reflected on caption");
+      it("is reflected on caption", function() {
+        api.post(`/captions/${caption.id}/hate`).then(function(r) {
+          return api.get('/captions').then(function(r) {
+            return r.body.captions.find(function(c) { return c.id == caption.id; })
+          });
+        }).then(function(c) {
+          expect(c.hates).toEqual(2);
+        })
+      });
     })
   });
 

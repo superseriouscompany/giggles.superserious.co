@@ -74,17 +74,29 @@ describe("giggles api", function () {
       })
     });
 
-    it("400s if file is not present");
+    it("400s if file is not present", function() {
+      return api.post({ url: `/submissions/${submission.id}/captions`, formData: {nope: 'nothing'}}).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(400);
+        expect(err.response.body.message).toEqual("You must attach a valid aac audio file in the `audio` field of your multipart request.");
+      });
+    });
 
     it("413s if file is too large", function() {
       return factory.caption({
-        audio:fs.createReadStream(__dirname + '/../fixtures/massive.aac')
+        audio: fs.createReadStream(__dirname + '/../fixtures/massive.aac'),
       }).then(shouldFail).catch(function(err) {
         expect(err.statusCode).toEqual(413);
       });
     });
 
-    it("400s if submission id doesn't exist");
+    it("400s if submission id doesn't exist", function() {
+      return factory.caption({
+        submissionId: 'nope'
+      }).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(400);
+        expect(err.response.body.message).toEqual("The submission `nope` does not exist.")
+      });
+    });
 
     it("allows uploading a valid caption and creates a uuid", function() {
       const formData = {
@@ -164,23 +176,33 @@ const factory = {
     }
 
     return api.post({url: '/submissions', formData: formData}).then(function(s) {
-      return s.body;
+      return api.post({
+        url: `/next`,
+        body: { id: s.body.id }
+      }).then(function() {
+        return s.body;
+      })
     })
   },
 
   caption: function(params) {
     // TODO: allow adding caption to existing submission
     params = Object.assign({
+      submissionId: null,
       audio: fs.createReadStream(`${__dirname}/../fixtures/lawng.aac`),
     }, params)
 
-    return factory.submission().then(function(s) {
+    const submissionId = params.submissionId ?
+      Promise.resolve(params.submissionId) :
+      factory.submission().then(function(s) { return s.id });
+
+    return submissionId.then(function(submissionId) {
       const formData = {
         audio: params.audio
       }
 
       return api.post({
-        url: `/submissions/${s.id}/captions`,
+        url: `/submissions/${submissionId}/captions`,
         formData: formData
       }).then(function(r) {
         return r.body;

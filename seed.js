@@ -3,7 +3,9 @@
 const request = require('request');
 const fs      = require('fs');
 
-const baseUrl = 'https://giggles.superserious.co';
+const baseUrl = process.env.NODE_ENV == 'production' ?
+  'https://giggles.superserious.co':
+  'https://superserious.ngrok.io';
 
 for( var i = 1; i <= 5; i++ ) {
   request({

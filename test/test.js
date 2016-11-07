@@ -274,7 +274,15 @@ describe("giggles api", function () {
           queuedSubmission = s;
         })
       })
-      it("422s on malformed input");
+
+      it("400s on malformed input", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueue`, {
+          body: { garbage: 'trash' }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body.message).toMatch(/receipt/);
+        })
+      });
 
       it("410s if submission is not found", function() {
         return api.post(`/submissions/nope/jumpQueue`, {

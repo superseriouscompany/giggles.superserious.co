@@ -163,9 +163,44 @@ describe("giggles api", function () {
   });
 
   describe("next selection", function() {
-    it("selects a random image from the queue");
+    it("400s if queue is empty");
 
-    it("selects an image with the given ID");
+    it("selects a random image from the queue", function() {
+      let currentSubmission;
+
+      return api.get('/submissions').then(function(r) {
+        return r.body.submissions[0];
+      }).then(function(cs) {
+        currentSubmission = cs;
+        return factory.queuedSubmission();
+      }).then(function() {
+        return api.post('/next')
+      }).then(function() {
+        return api.get('/submissions').then(function(r) {
+          return r.body.submissions[0];
+        })
+      }).then(function(s) {
+        expect(s.id).toExist();
+        expect(s.id).toNotEqual(currentSubmission.id);
+      });
+    });
+
+    it("selects an image with the given ID", function() {
+      let submission;
+      return factory.queuedSubmission().then(function(s) {
+        submission = s;
+        return api.post({
+          url: `/next`,
+          body: { id: s.id }
+        })
+      }).then(function() {
+        return api.get('/submissions').then(function(r) {
+          return r.body.submissions[0]
+        });
+      }).then(function(s) {
+        expect(s.id).toEqual(submission.id);
+      })
+    });
   });
 
   describe("jumping the queue", function() {
@@ -189,6 +224,17 @@ describe("giggles api", function () {
 
 const factory = {
   submission: function(params) {
+    return factory.queuedSubmission(params).then(function(s) {
+      return api.post({
+        url: `/next`,
+        body: { id: s.id }
+      }).then(function() {
+        return s;
+      })
+    });
+  },
+
+  queuedSubmission: function(params) {
     params = Object.assign({
       photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg'),
     }, params);
@@ -198,13 +244,8 @@ const factory = {
     }
 
     return api.post({url: '/submissions', formData: formData}).then(function(s) {
-      return api.post({
-        url: `/next`,
-        body: { id: s.body.id }
-      }).then(function() {
-        return s.body;
-      })
-    })
+      return s.body
+    });
   },
 
   caption: function(params) {

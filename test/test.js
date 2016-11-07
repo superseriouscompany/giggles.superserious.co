@@ -37,7 +37,15 @@ describe("giggles api", function () {
       });
     });
 
-    it("413s if file is too large");
+    it("413s if file is too large", function() {
+      const formData = {
+        photo: fs.createReadStream(__dirname + '/../fixtures/massive.jpg'),
+      };
+
+      return api.post({ url: '/submissions', formData: formData }).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(413);
+      })
+    });
 
     it("allows uploading a valid submission and creates a uuid", function () {
       const formData = {
@@ -64,7 +72,13 @@ describe("giggles api", function () {
 
     it("400s if file is not present");
 
-    it("413s if file is too large");
+    it("413s if file is too large", function() {
+      return factory.caption({
+        audio:fs.createReadStream(__dirname + '/../fixtures/massive.aac')
+      }).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(413);
+      });
+    });
 
     it("400s if submission id doesn't exist");
 
@@ -82,6 +96,58 @@ describe("giggles api", function () {
           expect(r.body.id).toExist();
         });
       });
+    });
+  });
+
+  describe("ratings", function() {
+    let caption;
+
+    before(function() {
+      return factory.caption().then(function(c) { caption = c; })
+    })
+
+    describe("likes", function() {
+      it("400s if caption is not found");
+
+      it("204s on success")
+
+      it("is reflected on caption")
+    })
+
+    describe("hates", function() {
+      it("400s if caption is not found");
+
+      it("204s on success");
+
+      it("is reflected on caption");
+    })
+  });
+
+  describe("moderation", function() {
+    it("204s on success");
+  });
+
+  describe("next selection", function() {
+    it("selects a random image from the queue");
+
+    it("selects an image with the given ID");
+  });
+
+  describe("jumping the queue", function() {
+    describe("iOS", function() {
+      it("422s on malformed input");
+
+      it("403s on receipt validation failure");
+
+      it("jumps queue on success");
+    });
+
+    describe("Android", function() {
+      it("422s on malformed input");
+
+      it("403s on receipt validation failure");
+
+      it("jumps queue on success");
     });
   });
 });
@@ -113,16 +179,15 @@ const factory = {
       }
 
       return api.post({
-        url: `/submissions/${submission.id}/captions`,
+        url: `/submissions/${s.id}/captions`,
         formData: formData
       }).then(function(r) {
-        expect(r.statusCode).toEqual(201);
-        expect(r.body.id).toExist();
+        return r.body;
       });
     });
   }
 }
 
 function shouldFail(r) {
-  throw `Expected an unsuccessful response, but got ${r.statusCode}: ${r.body}`;
+  throw `Expected an unsuccessful response, but got ${r}: ${r.statusCode} ${r.body}`;
 }

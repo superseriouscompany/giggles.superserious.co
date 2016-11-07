@@ -36,8 +36,10 @@ let submissionStorage = multer.diskStorage({
   }
 })
 
-let captionUpload    = multer({storage: captionStorage});
-let submissionUpload = multer({storage: submissionStorage});
+const MB = 1024*1024;
+
+let captionUpload    = multer({storage: captionStorage, limits: {fileSize: MB * 2}});
+let submissionUpload = multer({storage: submissionStorage, limits: {fileSize: MB * 2}});
 
 let captions    = [],
     submissions = [],
@@ -222,6 +224,8 @@ app.get('/kill', function(req, res) {
 })
 
 app.use(function(err, req, res, next) {
+  if( err.code == 'LIMIT_FILE_SIZE' ) { return res.status(413).json({message: 'Your file is too big.'}) }
+
   console.error(err, err.stack);
   res.status(500).json({message: 'Something went wrong.'});
 })

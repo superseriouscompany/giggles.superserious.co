@@ -233,7 +233,7 @@ app.post('/submissions/:id/captions', captionUpload.single('audio'), function(re
 
 app.post('/captions/:id/like', function(req, res) {
   var caption = captions.find(function(c) { return c.id === req.params.id });
-  if( !caption ) { return res.sendStatus(404); }
+  if( !caption ) { return res.status(400).json({message: `\`${req.params.id}\` doesn't exist.`}); }
   caption.likes = caption.likes || 0;
   caption.likes++;
   res.sendStatus(204);
@@ -241,7 +241,7 @@ app.post('/captions/:id/like', function(req, res) {
 
 app.post('/captions/:id/hate', function(req, res) {
   var caption = captions.find(function(c) { return c.id === req.params.id });
-  if( !caption ) { return res.sendStatus(404); }
+  if( !caption ) { return res.status(400).json({message: `\`${req.params.id}\` doesn't exist.`}); }
   caption.hates = caption.hates || 0;
   caption.hates++;
   res.sendStatus(204);

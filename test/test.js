@@ -120,24 +120,46 @@ describe("giggles api", function () {
     })
 
     describe("likes", function() {
-      it("400s if caption is not found");
+      it("400s if caption is not found", function() {
+        api.post('/captions/nope/like').then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/doesn't exist/);
+        })
+      });
 
-      it("204s on success")
+      it("204s on success", function() {
+        api.post(`/captions/${caption.id}/like`).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+        })
+      })
 
-      it("is reflected on caption")
+      it("is reflected on caption");
     })
 
     describe("hates", function() {
-      it("400s if caption is not found");
+      it("400s if caption is not found", function() {
+        api.post('/captions/nope/hate').then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/doesn't exist/);
+        })
+      });
 
-      it("204s on success");
+      it("204s on success", function() {
+        api.post(`/captions/${caption.id}/hate`).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+        })
+      })
 
       it("is reflected on caption");
     })
   });
 
   describe("moderation", function() {
-    it("204s on success");
+    it("204s for anything", function() {
+      return api.post(`/submissions/whatever/report`).then(function(r) {
+        expect(r.statusCode).toEqual(204);
+      })
+    });
   });
 
   describe("next selection", function() {

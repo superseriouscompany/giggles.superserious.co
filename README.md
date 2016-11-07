@@ -11,3 +11,7 @@ Installation:
 Running in development:
 
     $ npm run dev
+
+Testing:
+
+    $ npm test

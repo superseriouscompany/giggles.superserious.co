@@ -83,7 +83,7 @@ app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
 })
 
 app.post('/next', function(req,res) {
-  if( !queue.length ) { return res.status(400).json({error: 'Queue empty'}) }
+  if( !queue.length ) { return res.status(400).json({message: 'Queue empty'}) }
 
   if( !req.body.id ) {
     choose(Math.random() * (queue.length - 1));
@@ -252,6 +252,15 @@ app.get('/kill', function(req, res) {
     kill: false
   })
 })
+
+if( process.env.NODE_ENV != 'production' ) {
+  app.delete('/all', function(req, res) {
+    captions = [];
+    submissions = [];
+    queue = [];
+    res.sendStatus(204);
+  })
+}
 
 app.use(function(err, req, res, next) {
   if( err.code == 'LIMIT_FILE_SIZE' ) { return res.status(413).json({message: 'Your file is too big.'}) }

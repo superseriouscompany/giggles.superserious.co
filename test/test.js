@@ -57,6 +57,19 @@ describe("giggles api", function () {
         expect(r.body.id).toExist();
       })
     });
+
+    it("returns a submission once it is chosen", function() {
+      let submission;
+
+      return factory.submission().then(function(s) {
+        submission = s;
+        return api.get('/submissions');
+      }).then(function(r) {
+        expect(r.statusCode).toEqual(200);
+        expect(r.body.submissions.length).toBeGreaterThanOrEqualTo(1);
+        expect(r.body.submissions[0].id).toEqual(submission.id);
+      })
+    })
   });
 
   describe("caption", function() {
@@ -110,6 +123,22 @@ describe("giggles api", function () {
         expect(r.body.id).toExist();
       });
     });
+
+    it("returns a caption once it is added", function() {
+      let submission, caption;
+
+      return factory.submission().then(function(s) {
+        submission = s;
+        return factory.caption({submissionId: s.id})
+      }).then(function(c) {
+        caption = c;
+        return api.get(`/submissions/${submission.id}/captions`)
+      }).then(function(r) {
+        expect(r.statusCode).toEqual(200);
+        expect(r.body.captions.length).toEqual(1, 'there should have been one caption');
+        expect(r.body.captions[0].id).toEqual(caption.id);
+      })
+    })
   });
 
   describe("ratings", function() {
@@ -146,20 +175,20 @@ describe("giggles api", function () {
 
     describe("hates", function() {
       it("400s if caption is not found", function() {
-        api.post('/captions/nope/hate').then(shouldFail).catch(function(err) {
+        return api.post('/captions/nope/hate').then(shouldFail).catch(function(err) {
           expect(err.statusCode).toEqual(400);
           expect(err.response.body).toMatch(/doesn't exist/);
         })
       });
 
       it("204s on success", function() {
-        api.post(`/captions/${caption.id}/hate`).then(function(r) {
+        return api.post(`/captions/${caption.id}/hate`).then(function(r) {
           expect(r.statusCode).toEqual(204);
         })
       })
 
       it("is reflected on caption", function() {
-        api.post(`/captions/${caption.id}/hate`).then(function(r) {
+        return api.post(`/captions/${caption.id}/hate`).then(function(r) {
           return api.get('/captions').then(function(r) {
             return r.body.captions.find(function(c) { return c.id == caption.id; })
           });
@@ -179,7 +208,15 @@ describe("giggles api", function () {
   });
 
   describe("next selection", function() {
-    it("400s if queue is empty");
+    it("400s if queue is empty", function() {
+      if( process.env.NODE_ENV == 'production' ) { return true; }
+      return api({url: '/all', method: 'DELETE'}).then(function() {
+        return api.post('/next');
+      }).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(400);
+        expect(err.response.body.message).toMatch('empty');
+      })
+    });
 
     it("selects a random image from the queue", function() {
       let currentSubmission;
@@ -197,7 +234,7 @@ describe("giggles api", function () {
         })
       }).then(function(s) {
         expect(s.id).toExist();
-        expect(s.id).toNotEqual(currentSubmission.id);
+        expect(s.id).toNotEqual(currentSubmission && currentSubmission.id);
       });
     });
 

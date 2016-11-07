@@ -66,7 +66,7 @@ app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
     }
 
     return res.status(400).json({
-      message: "You must attach a valid photo in the `file` field of your multipart request."
+      message: "You must attach a valid photo in the `photo` field of your multipart request."
     });
   }
 
@@ -180,6 +180,20 @@ app.get('/submissions/:id/captions', function(req, res) {
 })
 
 app.post('/submissions/:id/captions', captionUpload.single('audio'), function(req, res) {
+  if( !req.file || !req.file.filename ) {
+    const contentType = req.get('Content-Type');
+    if( !contentType || !contentType.match(/multipart\/form-data/i) ) {
+      return res.status(415).json({
+        message: "Your `Content-Type` must be `multipart/form-data`."
+      });
+    }
+
+    return res.status(400).json({
+      message: "You must attach a valid aac audio file in the `audio` field of your multipart request."
+    });
+  }
+
+
   const uuid = UUID.v1();
 
   let duration = 42;

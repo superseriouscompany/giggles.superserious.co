@@ -33,7 +33,7 @@ describe("giggles api", function () {
     it("400s if no file is present", function () {
       return api.post({ url: '/submissions', formData: {nope: 'nothing'}}).then(shouldFail).catch(function(err) {
         expect(err.statusCode).toEqual(400);
-        expect(err.response.body.message).toEqual("You must attach a valid photo in the `file` field of your multipart request.");
+        expect(err.response.body.message).toEqual("You must attach a valid photo in the `photo` field of your multipart request.");
       });
     });
 
@@ -68,7 +68,11 @@ describe("giggles api", function () {
       })
     })
 
-    it("415s if form is not multipart upload");
+    it("415s if form is not multipart upload", function() {
+      return api.post(`/submissions/${submission.id}/captions`, {cool: 'nice'}).then(shouldFail).catch(function(err) {
+        expect(err.statusCode).toEqual(415, err);
+      })
+    });
 
     it("400s if file is not present");
 
@@ -83,18 +87,15 @@ describe("giggles api", function () {
     it("400s if submission id doesn't exist");
 
     it("allows uploading a valid caption and creates a uuid", function() {
-      return factory.submission().then(function(s) {
-        const formData = {
-          audio: fs.createReadStream(__dirname + '/../fixtures/lawng.aac'),
-        }
-
-        return api.post({
-          url: `/submissions/${submission.id}/captions`,
-          formData: formData
-        }).then(function(r) {
-          expect(r.statusCode).toEqual(201);
-          expect(r.body.id).toExist();
-        });
+      const formData = {
+        audio: fs.createReadStream(__dirname + '/../fixtures/lawng.aac'),
+      }
+      return api.post({
+        url: `/submissions/${submission.id}/captions`,
+        formData: formData
+      }).then(function(r) {
+        expect(r.statusCode).toEqual(201);
+        expect(r.body.id).toExist();
       });
     });
   });

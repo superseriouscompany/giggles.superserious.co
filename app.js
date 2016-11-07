@@ -85,18 +85,19 @@ app.post('/submissions', submissionUpload.single('photo'), function(req, res) {
 app.post('/next', function(req,res) {
   if( !queue.length ) { return res.status(400).json({error: 'Queue empty'}) }
 
-  if( req.body.id ) {
-    for( var i = 0; i < queue.length; i++ ) {
-      if( queue[i].id == req.body.id ) {
-        choose(i);
-        res.sendStatus(204);
-      }
-    }
-    res.status(400).json({message: `\`${req.body.id}\` was not found in the submissions queue.`});
+  if( !req.body.id ) {
+    choose(Math.random() * (queue.length - 1));
+    return res.sendStatus(204);
   }
 
-  choose(Math.random() * (queue.length - 1));
-  res.sendStatus(204);
+  for( var i = 0; i < queue.length; i++ ) {
+    if( queue[i].id == req.body.id ) {
+      choose(i);
+      return res.sendStatus(204);
+    }
+  }
+
+  return res.status(400).json({message: `\`${req.body.id}\` was not found in the submissions queue.`});
 })
 
 function choose(index) {
@@ -204,7 +205,6 @@ app.post('/submissions/:id/captions', captionUpload.single('audio'), function(re
   }
 
   if( !submissions.find(function(s) { return s.id == req.params.id }) ) {
-    console.log(submissions.map(function(s) { return s.id}));
     return res.status(400).json({
       message: `The submission \`${req.params.id}\` does not exist.`,
     })

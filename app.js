@@ -119,7 +119,7 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
       submissionIndex = i;
     }
   }
-  if( !submissionIndex ) {
+  if( submissionIndex === undefined ) {
     return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
   }
 
@@ -154,7 +154,7 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
       submissionIndex = i;
     }
   }
-  if( !submissionIndex ) {
+  if( submissionIndex === undefined ) {
     return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
   }
 
@@ -172,11 +172,14 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
     json: true,
   }).then(function(body) {
     const accessToken = body.access_token;
-    const url = `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`
+    let url = `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`
 
-    return req.query.stubPort ?
-      request.patch(url, { json: true, body: { purchaseState: 0, consumptionState: 1 }}) :
-      request(url, {json: true});
+    if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
+      if( req.query.stubStatus ) url += `&status=${req.query.stubStatus}`;
+      return request.patch(url, { json: true, body: req.body.stubBody });
+    }
+
+    return request(url, {json: true});
   }).then(function(body) {
     if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
     if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }

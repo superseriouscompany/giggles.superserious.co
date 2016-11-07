@@ -315,11 +315,57 @@ describe("giggles api", function () {
         });
       });
 
-      it("403s on receipt validation failure");
+      it("500s if purchase is cancelled", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid?stubPort=3001`, {
+          body: {
+            purchaseToken: 'realToken',
+            stubBody: {
+              purchaseState: 1,
+              consumptionState: 1,
+            }
+          }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(500);
+        })
+      });
+
+      it("500s if IAP is not consumed", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid?stubPort=3001`, {
+          body: {
+            purchaseToken: 'realToken',
+            stubBody: {
+              purchaseState: 0,
+              consumptionState: 0,
+            }
+          }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(500);
+        })
+      });
+
+      it("500s on unknown receipt validation failure", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid?stubPort=3001&stubStatus=403`, {
+          body: {
+            purchaseToken: 'badToken',
+            stubBody: {
+              purchaseState: 0,
+              consumptionState: 1
+            }
+          }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(500, err);
+        })
+      })
 
       it("jumps queue on success", function() {
         return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid?stubPort=3001`, {
-          body: { purchaseToken: 'realToken' }
+          body: {
+            purchaseToken: 'realToken',
+            stubBody: {
+              purchaseState: 0,
+              consumptionState: 1,
+            }
+          }
         }).then(function(r) {
           expect(r.statusCode).toEqual(204);
           return api.get('/submissions').then(function(r) { return r.body.submissions; });
@@ -384,5 +430,14 @@ const factory = {
 }
 
 function shouldFail(r) {
-  throw `Expected an unsuccessful response, but got ${r}: ${r.statusCode} ${r.body}`;
+  let err;
+  if( r.statusCode ) {
+    err = new Error(`Expected an unsuccessful response, got: ${r.statusCode} ${JSON.stringify(r.body)}`);
+    err.statusCode = r.statusCode;
+    err.response = { body: r.body };
+  } else {
+    err = new Error(`Expected an unsuccessful response, got: ${r}`);
+    err.statusCode = 420;
+  }
+  throw err;
 }

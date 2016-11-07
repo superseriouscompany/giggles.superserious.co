@@ -266,20 +266,19 @@ describe("giggles api", function () {
   });
 
   describe("jumping the queue", function() {
-    let queuedSubmission;
-
-    before(function() {
-      return factory.queuedSubmission().then(function(s) {
-        queuedSubmission = s;
-      })
-    })
-
     describe("iOS", function() {
+      let queuedSubmission;
+
+      before(function() {
+        return factory.queuedSubmission().then(function(s) {
+          queuedSubmission = s;
+        })
+      })
       it("422s on malformed input");
 
       it("410s if submission is not found", function() {
         return api.post(`/submissions/nope/jumpQueue`, {
-          receipt: 'anything'
+          body: { receipt: 'anything' }
         }).then(shouldFail).catch(function(err) {
           expect(err.statusCode).toEqual(410);
         })
@@ -291,11 +290,26 @@ describe("giggles api", function () {
     });
 
     describe("Android", function() {
-      it("400s on malformed input");
+      let queuedSubmission;
+
+      before(function() {
+        return factory.queuedSubmission().then(function(s) {
+          queuedSubmission = s;
+        })
+      })
+
+      it("400s on malformed input", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid`, {
+          body: { garbage: 'trash' }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body.message).toMatch('purchaseToken');
+        })
+      });
 
       it("410s if submission is not found", function() {
         return api.post(`/submissions/nope/jumpQueueAndroid`, {
-          purchaseToken: 'anything'
+          body: { purchaseToken: 'anything'}
         }).then(shouldFail).catch(function(err) {
           expect(err.statusCode).toEqual(410);
         });

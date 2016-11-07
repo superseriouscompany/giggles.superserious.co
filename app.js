@@ -109,6 +109,10 @@ function choose(index) {
 app.post('/submissions/:id/jumpQueue', function(req, res) {
   const receipt = req.body.receipt;
 
+  if( !receipt ) {
+    return res.status(400).json({message: 'You must provide the Apple `receipt` in your request body.'});
+  }
+
   let submissionIndex;
   for( var i = 0; i < queue.length; i++ ) {
     if( queue[i].id == req.params.id ) {
@@ -139,6 +143,10 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
   const purchaseToken = req.body.purchaseToken;
   const bundleId      = 'com.superserious.giggles';
   const productId     = 'com.superserious.giggles.now';
+
+  if( !purchaseToken ) {
+    return res.status(400).json({message: 'You must provide the google `purchaseToken` in your request body.'});
+  }
 
   let submissionIndex;
   for( var i = 0; i < queue.length; i++ ) {

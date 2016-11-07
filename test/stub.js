@@ -4,7 +4,7 @@ const app        = express();
 
 app.use(bodyParser.json());
 
-app.use('/', function(req, res) {
+app.use('*', function(req, res) {
   const status = req.query.status || 200;
   if( !req.body || !Object.keys(req.body).length ) { return res.sendStatus(status); }
   return res.status(status).json(req.body);

@@ -2,7 +2,8 @@
 
 const request = require('request-promise'),
       fs      = require('fs'),
-      expect  = require('expect');
+      expect  = require('expect'),
+      stub    = require('./stub');
 
 const baseUrl = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
@@ -15,12 +16,20 @@ const api = request.defaults({
 })
 
 describe("giggles api", function () {
+  let stubClose;
+
   before(function() {
+    stubClose = stub(3001);
+
     return api('/').catch(function(err) {
       console.error(`API is not running at ${baseUrl}`);
       process.exit(1);
     })
-  })
+  });
+
+  after(function() {
+    stubClose();
+  });
 
   describe('submission', function() {
     it("415s if form contains no multipart upload", function () {
@@ -257,8 +266,24 @@ describe("giggles api", function () {
   });
 
   describe("jumping the queue", function() {
+    let queuedSubmission;
+
+    before(function() {
+      return factory.queuedSubmission().then(function(s) {
+        queuedSubmission = s;
+      })
+    })
+
     describe("iOS", function() {
       it("422s on malformed input");
+
+      it("410s if submission is not found", function() {
+        return api.post(`/submissions/nope/jumpQueue`, {
+          receipt: 'anything'
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(410);
+        })
+      })
 
       it("403s on receipt validation failure");
 
@@ -266,7 +291,15 @@ describe("giggles api", function () {
     });
 
     describe("Android", function() {
-      it("422s on malformed input");
+      it("400s on malformed input");
+
+      it("410s if submission is not found", function() {
+        return api.post(`/submissions/nope/jumpQueueAndroid`, {
+          purchaseToken: 'anything'
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(410);
+        });
+      });
 
       it("403s on receipt validation failure");
 

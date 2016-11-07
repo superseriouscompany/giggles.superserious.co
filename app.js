@@ -109,6 +109,16 @@ function choose(index) {
 app.post('/submissions/:id/jumpQueue', function(req, res) {
   const receipt = req.body.receipt;
 
+  let submissionIndex;
+  for( var i = 0; i < queue.length; i++ ) {
+    if( queue[i].id == req.params.id ) {
+      submissionIndex = i;
+    }
+  }
+  if( !submissionIndex ) {
+    return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
+  }
+
   iapClient.verifyReceipt(receipt, true, function(valid, msg, payload) {
     if( !valid ) {
       console.error(msg, payload);
@@ -120,14 +130,8 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
       return res.status(403).json({error: "You have not purchased a pass to skip the line"});
     }
 
-    for( var i = 0; i < queue.length; i++ ) {
-      if( queue[i].id == req.params.id ) {
-        choose(i);
-        return res.sendStatus(204)
-      }
-    }
-
-    return res.status(400).json({error: `${req.params.id} isn't in the queue.`});
+    choose(submissionIndex);
+    return res.sendStatus(204);
   })
 })
 
@@ -136,7 +140,20 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
   const bundleId      = 'com.superserious.giggles';
   const productId     = 'com.superserious.giggles.now';
 
-  console.log("Bout to get a new token");
+  let submissionIndex;
+  for( var i = 0; i < queue.length; i++ ) {
+    if( queue[i].id == req.params.id ) {
+      submissionIndex = i;
+    }
+  }
+  if( !submissionIndex ) {
+    return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
+  }
+
+  const baseUrl = process.env.NODE_ENV != 'production' && req.query.stubPort ?
+    `http://localhost:${req.query.stubPort}` :
+    'https://www.googleapis.com';
+
   request.post('https://accounts.google.com/o/oauth2/token', {
     form: {
       grant_type: 'refresh_token',
@@ -147,22 +164,15 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
     json: true,
   }).then(function(body) {
     const accessToken = body.access_token;
-    console.log("Got token", accessToken);
-    console.log("Purchase token", purchaseToken);
-    return request(`https://www.googleapis.com/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`, {json: true});
+    return request(
+      `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`, {json: true}
+    );
   }).then(function(body) {
-    console.log(body);
     if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
     if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
 
-    for( var i = 0; i < queue.length; i++ ) {
-      if( queue[i].id == req.params.id ) {
-        choose(i);
-        return res.sendStatus(204);
-      }
-    }
-
-    return res.status(410).json({message: "Your purchase was valid, but we couldn't find your photo. Let us know at support@superserious.co"});
+    choose(submissionIndex);
+    return res.sendStatus(204);
   }).catch(function(err) {
     next(err);
   })

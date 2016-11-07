@@ -12,7 +12,6 @@ const request     = require('request-promise');
 const app         = express();
 const port        = process.env.PORT || 3000;
 const iapClient   = new IAPVerifier();
-
 const baseUrl     = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
   'https://superserious.ngrok.io';
@@ -106,7 +105,7 @@ function choose(index) {
   submissions.unshift(chosenOne);
 }
 
-app.post('/submissions/:id/jumpQueue', function(req, res) {
+app.post('/submissions/:id/jumpQueue', function(req, res, next) {
   const receipt = req.body.receipt;
 
   if( !receipt ) {
@@ -123,10 +122,24 @@ app.post('/submissions/:id/jumpQueue', function(req, res) {
     return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
   }
 
-  iapClient.verifyReceipt(receipt, true, function(valid, msg, payload) {
+  let client;
+  if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
+    client = new IAPVerifier();
+    client.stubUrl = 'http://localhost:3001';
+    client.stubBody = req.body.stubBody || {};
+  } else {
+    client = iapClient;
+  }
+
+  client.verifyReceipt(receipt, true, function(valid, msg, payload) {
     if( !valid ) {
       console.error(msg, payload);
       return res.status(403).json({error: msg});
+    }
+
+    if( !payload.receipt || !payload.receipt.in_app || !payload.receipt.in_app[0] ) {
+      console.warn(payload);
+      return next(new Error('Invalid payload from apple servers'));
     }
 
     if( !payload.receipt.in_app || payload.receipt.in_app[0].product_id != 'com.superserious.giggles.now' ) {

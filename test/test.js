@@ -294,7 +294,28 @@ describe("giggles api", function () {
 
       it("403s on receipt validation failure");
 
-      it("jumps queue on success");
+      it("jumps queue on success", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueue?stubPort=3001`, {
+          body: {
+            receipt: 'validReceipt',
+            stubBody: {
+              status: 0,
+              receipt: {
+                in_app: [
+                  {
+                    product_id: 'com.superserious.giggles.now'
+                  }
+                ]
+              }
+            }
+          }
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+          return api.get('/submissions').then(function(r) { return r.body.submissions; });
+        }).then(function(submissions) {
+          expect(submissions[0].id).toEqual(queuedSubmission.id);
+        });
+      });
     });
 
     describe("Android", function() {

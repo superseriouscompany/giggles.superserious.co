@@ -1,7 +1,7 @@
 'use strict';
 
 const request = require('request-promise'),
-      fs = require('fs'),
+      fs      = require('fs'),
       expect  = require('expect');
 
 const baseUrl = process.env.NODE_ENV == 'production' ?

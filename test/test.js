@@ -47,6 +47,8 @@ describe("giggles api", function () {
     });
 
     it("413s if file is too large", function() {
+      this.slow(500);
+
       const formData = {
         photo: fs.createReadStream(__dirname + '/../fixtures/massive.jpg'),
       };
@@ -68,6 +70,8 @@ describe("giggles api", function () {
     });
 
     it("returns a submission once it is chosen", function() {
+      this.slow(250);
+
       let submission;
 
       return factory.submission().then(function(s) {
@@ -104,6 +108,8 @@ describe("giggles api", function () {
     });
 
     it("413s if file is too large", function() {
+      this.slow(250);
+
       return factory.caption({
         audio: fs.createReadStream(__dirname + '/../fixtures/massive.aac'),
       }).then(shouldFail).catch(function(err) {
@@ -134,6 +140,8 @@ describe("giggles api", function () {
     });
 
     it("returns a caption once it is added", function() {
+      this.slow(250);
+
       let submission, caption;
 
       return factory.submission().then(function(s) {
@@ -217,6 +225,8 @@ describe("giggles api", function () {
   });
 
   describe("next selection", function() {
+    this.slow(250);
+
     it("400s if queue is empty", function() {
       if( process.env.NODE_ENV == 'production' ) { return true; }
       return api({url: '/all', method: 'DELETE'}).then(function() {
@@ -267,6 +277,8 @@ describe("giggles api", function () {
 
   describe("jumping the queue", function() {
     describe("iOS", function() {
+      this.slow(250);
+
       let queuedSubmission;
 
       before(function() {
@@ -330,6 +342,8 @@ describe("giggles api", function () {
     });
 
     describe("Android", function() {
+      this.slow(750);
+
       let queuedSubmission;
 
       before(function() {

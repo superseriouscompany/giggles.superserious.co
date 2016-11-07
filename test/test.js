@@ -292,7 +292,18 @@ describe("giggles api", function () {
         })
       })
 
-      it("403s on receipt validation failure");
+      it("403s on receipt validation failure", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueue?stubPort=3001`, {
+          body: {
+            receipt: 'validReceipt',
+            stubBody: {
+              status: 21003
+            }
+          }
+        }).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(403);
+        })
+      });
 
       it("jumps queue on success", function() {
         return api.post(`/submissions/${queuedSubmission.id}/jumpQueue?stubPort=3001`, {

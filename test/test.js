@@ -317,7 +317,16 @@ describe("giggles api", function () {
 
       it("403s on receipt validation failure");
 
-      it("jumps queue on success");
+      it("jumps queue on success", function() {
+        return api.post(`/submissions/${queuedSubmission.id}/jumpQueueAndroid?stubPort=3001`, {
+          body: { purchaseToken: 'realToken' }
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+          return api.get('/submissions').then(function(r) { return r.body.submissions; });
+        }).then(function(submissions) {
+          expect(submissions[0].id).toEqual(queuedSubmission.id);
+        });
+      });
     });
   });
 });

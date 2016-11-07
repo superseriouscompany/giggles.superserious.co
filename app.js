@@ -172,9 +172,11 @@ app.post('/submissions/:id/jumpQueueAndroid', function(req, res, next) {
     json: true,
   }).then(function(body) {
     const accessToken = body.access_token;
-    return request(
-      `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`, {json: true}
-    );
+    const url = `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`
+
+    return req.query.stubPort ?
+      request.patch(url, { json: true, body: { purchaseState: 0, consumptionState: 1 }}) :
+      request(url, {json: true});
   }).then(function(body) {
     if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
     if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }

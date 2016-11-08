@@ -216,13 +216,16 @@ app.get('/submissions', function(req, res) {
 
 app.get('/captions', function(req, res) {
   res.json({
-    captions: captions.filter(function(c) { return c.submission_id == submissions[0].id})
+    captions: captions.filter(function(c) { return c.submission_id == submissions[0].id}).sort(function(a,b) { return (a.likes || 0) - (a.hates || 0) < (b.likes || 0) - (b.hates || 0) })
   })
 })
 
 app.get('/submissions/:id/captions', function(req, res) {
+  let results = captions.filter(function(c) { return c.submission_id == req.params.id });
+  results = results.sort(function(a,b) { return (a.likes || 0) - (a.hates || 0) < (b.likes || 0) - (b.hates || 0)})
+
   res.json({
-    captions: captions.filter(function(c) { return c.submission_id == req.params.id })
+    captions: results
   })
 })
 

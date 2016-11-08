@@ -215,7 +215,35 @@ describe("giggles api", function () {
       });
     })
 
-    it("sorts captions by score");
+    it("sorts captions by score", function() {
+      let yay, meh, nah, submissionId;
+
+      return factory.submission().then(function(s) {
+        submissionId = s.id;
+        return Promise.all([
+          factory.caption({submissionId: submissionId}),
+          factory.caption({submissionId: submissionId}),
+          factory.caption({submissionId: submissionId}),
+        ]);
+      }).then(function(captions) {
+        meh = captions[0];
+        yay = captions[1];
+        nah = captions[2];
+
+        return Promise.all([
+          api.post(`/captions/${yay.id}/like`),
+          api.post(`/captions/${nah.id}/hate`),
+        ])
+      }).then(function() {
+        return api.get(`/submissions/${submissionId}/captions`).then(function(r) {
+          return r.body.captions;
+        })
+      }).then(function(captions) {
+        expect(captions[0].id).toEqual(yay.id);
+        expect(captions[1].id).toEqual(meh.id);
+        expect(captions[2].id).toEqual(nah.id);
+      })
+    });
   });
 
   describe("moderation", function() {

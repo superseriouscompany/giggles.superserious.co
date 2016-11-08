@@ -180,12 +180,16 @@ describe("giggles api", function () {
       })
 
       it("is reflected on caption", function() {
-        api.post(`/captions/${caption.id}/like`).then(function(r) {
-          return api.get('/captions').then(function(r) {
-            return r.body.captions.find(function(c) { return c.id == caption.id; })
-          });
-        }).then(function(c) {
-          expect(c.likes).toEqual(2);
+        let caption;
+        return factory.caption().then(function(c) {
+          caption = c;
+          return api.post(`/captions/${caption.id}/like`)
+        }).then(function() {
+          return api.get(`/submissions/${caption.submissionId}/captions`)
+        }).then(function(r) {
+          let c = r.body.captions.find(function(c) { return c.id == caption.id; })
+          expect(c).toExist("Couldn't find caption");
+          expect(c.likes).toEqual(1);
         })
       });
     })
@@ -205,13 +209,16 @@ describe("giggles api", function () {
       })
 
       it("is reflected on caption", function() {
-        return api.post(`/captions/${caption.id}/hate`).then(function(r) {
-          return api.get('/captions').then(function(r) {
-            console.log("checking", c.id, r.body.captions);
-            return r.body.captions.find(function(c) { return c.id == caption.id; })
-          });
-        }).then(function(c) {
-          expect(c.hates).toEqual(2);
+        let caption;
+        return factory.caption().then(function(c) {
+          caption = c;
+          return api.post(`/captions/${caption.id}/hate`)
+        }).then(function() {
+          return api.get(`/submissions/${caption.submissionId}/captions`)
+        }).then(function(r) {
+          let c = r.body.captions.find(function(c) { return c.id == caption.id; })
+          expect(c).toExist("Couldn't find caption");
+          expect(c.hates).toEqual(1);
         })
       });
     })
@@ -508,7 +515,7 @@ const factory = {
         url: `/submissions/${submissionId}/captions`,
         formData: formData
       }).then(function(r) {
-        return r.body;
+        return Object.assign(r.body, {submissionId: submissionId});
       });
     });
   }

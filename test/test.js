@@ -207,6 +207,7 @@ describe("giggles api", function () {
       it("is reflected on caption", function() {
         return api.post(`/captions/${caption.id}/hate`).then(function(r) {
           return api.get('/captions').then(function(r) {
+            console.log("checking", c.id, r.body.captions);
             return r.body.captions.find(function(c) { return c.id == caption.id; })
           });
         }).then(function(c) {

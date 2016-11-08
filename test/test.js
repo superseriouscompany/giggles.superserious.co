@@ -214,6 +214,8 @@ describe("giggles api", function () {
         })
       });
     })
+
+    it("sorts captions by score");
   });
 
   describe("moderation", function() {

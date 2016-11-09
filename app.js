@@ -1,16 +1,9 @@
 'use strict';
 
 const express     = require('express');
-const multer      = require('multer');
-const UUID        = require('node-uuid');
 const bodyParser  = require('body-parser');
-const aacDuration = require('aac-duration');
-const request     = require('request-promise');
 const app         = express();
 const port        = process.env.PORT || 3000;
-const baseUrl     = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co' :
-  'https://superserious.ngrok.io';
 
 global.captions    = [];
 global.submissions = [];
@@ -21,16 +14,16 @@ app.use(bodyParser.json());
 app.use(express.static('captions', {maxAge: 86400000}));
 app.use(express.static('submissions', {maxAge: 86400000}));
 
+// endpoints
 require('./app/submissions')(app);
 require('./app/captions')(app);
 
-// administrative
+// administrative endpoints
 app.get('/', ping);
 app.get('/kill', killSwitch);
-if( process.env.NODE_ENV != 'production' ) {
-  app.delete('/all', flush);
-}
+app.delete('/all', flush);
 
+// error handler
 app.use(function(err, req, res, next) {
   if( err.code == 'LIMIT_FILE_SIZE' ) { return res.status(413).json({message: 'Your file is too big.'}) }
 
@@ -42,11 +35,8 @@ app.listen(port, function() {
   console.log(`Listening on port ${port}`);
 })
 
-function flush(req, res) {
-  captions = [];
-  submissions = [];
-  queue = [];
-  res.sendStatus(204);
+function ping(req, res) {
+  res.json({cool: 'nice'});
 }
 
 function killSwitch(req, res) {
@@ -55,6 +45,11 @@ function killSwitch(req, res) {
   })
 }
 
-function ping(req, res) {
-  res.json({cool: 'nice'});
+function flush(req, res) {
+  if( process.env.NODE_ENV == 'production' ) { return res.sendStatus(403); }
+
+  captions = [];
+  submissions = [];
+  queue = [];
+  res.sendStatus(204);
 }

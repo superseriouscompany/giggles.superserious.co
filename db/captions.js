@@ -9,55 +9,98 @@ const tableName = 'captionsStaging';
 
 module.exports = {
   create: create,
-
   forSubmission: forSubmission,
-
   get: get,
-
-  addLike: addLike,
-
-  addHate: addHate,
+  like: like,
+  hate: hate,
 }
 
 function forSubmission(submissionId, cb) {
-  client.query({
-    TableName: tableName,
-    IndexName: 'submissionId-score',
-    KeyConditionExpression: 'submissionId = :submissionId',
-    ScanIndexForward: false,
-    Limit: 1000,
-    ExpressionAttributeValues: {
-      ':submissionId': submissionId,
+  return new Promise(function(resolve, reject) {
+    client.query({
+      TableName: tableName,
+      IndexName: 'submissionId-score',
+      KeyConditionExpression: 'submissionId = :submissionId',
+      ScanIndexForward: false,
+      Limit: 1000,
+      ExpressionAttributeValues: {
+        ':submissionId': submissionId,
+      }
+    }, function(err, payload) {
+      if( err ) { return cb(err); }
+      return cb(null, payload.Items);
+    });
+
+    function cb(err, data) {
+      if( err ) { return reject(err); }
+      resolve(data);
     }
-  }, function(err, payload) {
-    if( err ) { return cb(err); }
-    return cb(null, payload.Items);
-  });
+  })
 }
 
 function create(caption, cb) {
-  client.put({
-    TableName: tableName,
-    Item: caption
-  }, cb);
-}
+  return new Promise(function(resolve, reject) {
+    client.put({
+      TableName: tableName,
+      Item: caption
+    }, cb);
 
-function get(id, cb) {
-  client.get({
-    TableName: tableName,
-    Key: {
-      id: id
+    function cb(err, data) {
+      if( err ) { return reject(err) }
+      resolve(data);
     }
-  }, function(err, payload) {
-    if( err ) { return cb(err); }
-    return cb(null, payload.Item);
   });
 }
 
-function addLike(id) {
+function get(id, cb) {
+  return new Promise(function(resolve, reject) {
+    client.get({
+      TableName: tableName,
+      Key: {
+        id: id
+      }
+    }, function(err, payload) {
+      if( err ) { return cb(err); }
+      return cb(null, payload.Item);
+    });
 
+    function cb(err, data) {
+      if( err ) { return reject(err) }
+      resolve(data);
+    }
+  })
 }
 
-function addHate(id) {
+function like(id) {
+  return new Promise(function(resolve, reject) {
+    client.update({
+      TableName: tableName,
+      Key: { id: id },
+      UpdateExpression: 'set likes = likes + 1, score = score + 1',
+    }, function(err, data) {
+      return cb(err, data);
+    })
 
+    function cb(err, data) {
+      if( err ) { return reject(err) }
+      resolve(data);
+    }
+  })
+}
+
+function hate(id) {
+  return new Promise(function(resolve, reject) {
+    client.update({
+      TableName: tableName,
+      Key: { id: id },
+      UpdateExpression: 'set likes = likes + 1, score = score + 1',
+    }, function(err, data) {
+      return cb(err, data);
+    })
+
+    function cb(err, data) {
+      if( err ) { return reject(err) }
+      resolve(data);
+    }
+  })
 }

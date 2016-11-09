@@ -3,6 +3,7 @@
 const multer      = require('multer');
 const UUID        = require('node-uuid');
 const aacDuration = require('aac-duration');
+const db          = require('../db/captions');
 const baseUrl     = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
   'https://superserious.ngrok.io';
@@ -29,21 +30,24 @@ module.exports = function(app) {
 }
 
 function all(req, res) {
-  res.json({
-    captions: captions.filter(function(c) { return c.submission_id == submissions[0].id}).sort(function(a,b) { return (a.likes || 0) - (a.hates || 0) < (b.likes || 0) - (b.hates || 0) })
-  })
+  const id = submissions[0].id;
+
+  db.forSubmission(id).then(function(captions) {
+    res.json({
+      captions: captions,
+    })
+  }).catch(next);
 }
 
-function forSubmission(req, res) {
-  let results = captions.filter(function(c) { return c.submission_id == req.params.id });
-  results = results.sort(function(a,b) { return (a.likes || 0) - (a.hates || 0) < (b.likes || 0) - (b.hates || 0)})
-
-  res.json({
-    captions: results
-  })
+function forSubmission(req, res, next) {
+  db.forSubmission(req.params.id).then(function(captions) {
+    res.json({
+      captions: captions,
+    })
+  }).catch(next);
 }
 
-function create(req, res) {
+function create(req, res, next) {
   if( !req.file || !req.file.filename ) {
     const contentType = req.get('Content-Type');
     if( !contentType || !contentType.match(/multipart\/form-data/i) ) {
@@ -72,30 +76,28 @@ function create(req, res) {
     console.error(err, "unable to convert", uuid);
   }
 
-  if( req.file && req.file.filename ) {
-    captions.unshift({
-      id: uuid,
-      filename: req.file.filename,
-      submission_id: req.params.id,
-      duration: duration,
-      audio_url: `${baseUrl}/${req.file.filename}`,
-    })
-  }
-  res.status(201).json({id: uuid});
+  db.create({
+    id: uuid,
+    filename: req.file.filename,
+    submission_id: req.params.id,
+    duration: duration,
+    audio_url: `${baseUrl}/${req.file.filename}`,
+    likes: 0,
+    hates: 0,
+    score: 0,
+  }).then(function() {
+    res.status(201).json({id: uuid});
+  }).catch(next);
 }
 
-function like(req, res) {
-  var caption = captions.find(function(c) { return c.id === req.params.id });
-  if( !caption ) { return res.status(400).json({message: `\`${req.params.id}\` doesn't exist.`}); }
-  caption.likes = caption.likes || 0;
-  caption.likes++;
-  res.sendStatus(204);
+function like(req, res, next) {
+  db.like(req.params.id).then(function() {
+    res.sendStatus(204);
+  }).catch(next);
 }
 
 function hate(req, res) {
-  var caption = captions.find(function(c) { return c.id === req.params.id });
-  if( !caption ) { return res.status(400).json({message: `\`${req.params.id}\` doesn't exist.`}); }
-  caption.hates = caption.hates || 0;
-  caption.hates++;
-  res.sendStatus(204);
+  db.hate(req.params.id).then(function() {
+    res.sendStatus(204);
+  }).catch(next);
 }

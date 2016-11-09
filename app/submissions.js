@@ -5,6 +5,7 @@ const request     = require('request-promise');
 const IAPVerifier = require('iap_verifier');
 const sizeOf      = require('image-size');
 const UUID        = require('node-uuid');
+const db          = require('../db/submissions');
 const iapClient   = new IAPVerifier();
 const baseUrl     = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
@@ -32,13 +33,15 @@ module.exports = function(app) {
   app.post('/next', pick);
 }
 
-function all(req, res) {
-  res.json({
-    submissions: submissions
-  })
+function all(req, res, next) {
+  return db.all().then(function(submissions) {
+    res.json({
+      submissions: submissions
+    })
+  }).catch(next);
 }
 
-function create(req, res) {
+function create(req, res, next) {
   const uuid = UUID.v1();
 
   if( !req.file || !req.file.filename ) {
@@ -56,14 +59,16 @@ function create(req, res) {
 
   const dimensions = sizeOf(`./submissions/${req.file.filename}`);
 
-  queue.push({
+  return db.create({
     id: uuid,
     filename: req.file.filename,
     width: dimensions.width,
     height: dimensions.height,
     image_url: `${baseUrl}/${req.file.filename}`,
-  })
-  res.status(201).json({id: uuid, queueSize: queue.length});
+  }).then(function() {
+    // FIXME: queueSize
+    res.status(201).json({id: uuid, queueSize: 420});
+  }).catch(next);
 }
 
 function jumpQueueIOS(req, res, next) {

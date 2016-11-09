@@ -1,4 +1,5 @@
-const AWS = require('aws-sdk');
+const AWS       = require('aws-sdk');
+const promisify = require('bluebird').Promise.promisify;
 AWS.config.update({
   credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
   region:      'us-west-2',
@@ -9,14 +10,13 @@ const tableName = 'submissionsStaging';
 
 module.exports = {
   create: create,
-
   all: all,
-
   get: get,
+  pick: pick,
 }
 
-function all(cb) {
-  client.query({
+function all() {
+  return promisify(client.query)({
     TableName: tableName,
     IndexName: 'isPublished-publishedAt',
     KeyConditionExpression: 'isPublished = :isPublished',
@@ -24,28 +24,35 @@ function all(cb) {
     Limit: 365,
     ExpressionAttributeValues: {
       ':isPublished': 'yes',
-    }
-  }, function(err, payload) {
-    if( err ) { return cb(err); }
-    return cb(null, payload.Items);
-  });
+    },
+  }).then(function(payload) {
+    return payload.Items;
+  })
 }
 
-function create(submission, cb) {
-  client.put({
+function create(submission) {
+  return promisify(client.put)({
     TableName: tableName,
-    Item: submission
-  }, cb);
+    Item: submission,
+  })
 }
 
-function get(id, cb) {
-  client.get({
+function get(id) {
+  return promisify(client.get)({
     TableName: tableName,
     Key: {
       id: id
     }
-  }, function(err, payload) {
-    if( err ) { return cb(err); }
-    return cb(null, payload.Item);
+  }).then(function(payload) {
+    return payload.Item;
+  });
+}
+
+function pick(id) {
+  const now = +new Date;
+  return promisify(client.update)({
+    TableName: tableName,
+    Key: { id: id },
+    UpdateExpression: 'set isPromoted = :true, score = score + 1',
   });
 }

@@ -16,6 +16,8 @@ const api = request.defaults({
 })
 
 describe("giggles api", function () {
+  this.timeout(5000);
+
   let stubClose;
 
   before(function() {
@@ -145,9 +147,11 @@ describe("giggles api", function () {
       let submission, caption;
 
       return factory.submission().then(function(s) {
+        console.log("submission created");
         submission = s;
         return factory.caption({submissionId: s.id})
       }).then(function(c) {
+        console.log("caption created");
         caption = c;
         return api.get(`/submissions/${submission.id}/captions`)
       }).then(function(r) {

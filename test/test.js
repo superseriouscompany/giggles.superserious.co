@@ -50,7 +50,7 @@ describe("giggles api", function () {
       this.slow(500);
 
       const formData = {
-        photo: fs.createReadStream(__dirname + '/../fixtures/massive.jpg'),
+        photo: fs.createReadStream(__dirname + '/fixtures/massive.jpg'),
       };
 
       return api.post({ url: '/submissions', formData: formData }).then(shouldFail).catch(function(err) {
@@ -60,7 +60,7 @@ describe("giggles api", function () {
 
     it("allows uploading a valid submission and creates a uuid", function () {
       const formData = {
-        photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg'),
+        photo: fs.createReadStream(__dirname + '/fixtures/photo.jpg'),
       };
 
       return api.post({ url: '/submissions', formData: formData }).then(function(r) {
@@ -111,7 +111,7 @@ describe("giggles api", function () {
       this.slow(250);
 
       return factory.caption({
-        audio: fs.createReadStream(__dirname + '/../fixtures/massive.aac'),
+        audio: fs.createReadStream(__dirname + '/fixtures/massive.aac'),
       }).then(shouldFail).catch(function(err) {
         expect(err.statusCode).toEqual(413);
       });
@@ -128,7 +128,7 @@ describe("giggles api", function () {
 
     it("allows uploading a valid caption and creates a uuid", function() {
       const formData = {
-        audio: fs.createReadStream(__dirname + '/../fixtures/lawng.aac'),
+        audio: fs.createReadStream(__dirname + '/fixtures/lawng.aac'),
       }
       return api.post({
         url: `/submissions/${submission.id}/captions`,
@@ -483,7 +483,7 @@ const factory = {
 
   queuedSubmission: function(params) {
     params = Object.assign({
-      photo: fs.createReadStream(__dirname + '/../fixtures/photo.jpg'),
+      photo: fs.createReadStream(__dirname + '/fixtures/photo.jpg'),
     }, params);
 
     const formData = {
@@ -499,7 +499,7 @@ const factory = {
     // TODO: allow adding caption to existing submission
     params = Object.assign({
       submissionId: null,
-      audio: fs.createReadStream(`${__dirname}/../fixtures/lawng.aac`),
+      audio: fs.createReadStream(`${__dirname}/fixtures/lawng.aac`),
     }, params)
 
     const submissionId = params.submissionId ?

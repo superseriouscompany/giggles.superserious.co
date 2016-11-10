@@ -15,3 +15,12 @@ Running in development:
 Testing:
 
     $ npm test
+
+Production Deployment:
+
+    $ git remote add aws ssh://git@giggles.superserious.co:/giggles.superserious.co.git
+    $ git push origin aws
+
+Production Restart:
+
+    $ ./systemctl restart

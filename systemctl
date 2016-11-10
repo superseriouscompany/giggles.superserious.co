@@ -1,0 +1,4 @@
+# http://unix.stackexchange.com/questions/122845/using-a-b-for-variable-assignment-in-scripts
+command=${1:-restart}
+
+ssh ubuntu@giggles.superserious.co "sudo /bin/systemctl $command app.service"

@@ -65,6 +65,8 @@ function create(req, res, next) {
     width: dimensions.width,
     height: dimensions.height,
     image_url: `${baseUrl}/${req.file.filename}`,
+    isPublished: 'no',
+    publishedAt: 0,
   }).then(function() {
     // FIXME: queueSize
     res.status(201).json({id: uuid, queueSize: 420});

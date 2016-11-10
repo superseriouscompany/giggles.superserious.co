@@ -16,7 +16,7 @@ module.exports = {
 }
 
 function all() {
-  return promisify(client.query)({
+  return promisify(client.query, {context: client})({
     TableName: tableName,
     IndexName: 'isPublished-publishedAt',
     KeyConditionExpression: 'isPublished = :isPublished',
@@ -31,14 +31,14 @@ function all() {
 }
 
 function create(submission) {
-  return promisify(client.put)({
+  return promisify(client.put, {context: client})({
     TableName: tableName,
     Item: submission,
   })
 }
 
 function get(id) {
-  return promisify(client.get)({
+  return promisify(client.get, {context: client})({
     TableName: tableName,
     Key: {
       id: id
@@ -50,7 +50,7 @@ function get(id) {
 
 function pick(id) {
   const now = +new Date;
-  return promisify(client.update)({
+  return promisify(client.update, {context: client})({
     TableName: tableName,
     Key: { id: id },
     UpdateExpression: 'set isPromoted = :true, score = score + 1',

@@ -147,11 +147,9 @@ describe("giggles api", function () {
       let submission, caption;
 
       return factory.submission().then(function(s) {
-        console.log("submission created");
         submission = s;
         return factory.caption({submissionId: s.id})
       }).then(function(c) {
-        console.log("caption created");
         caption = c;
         return api.get(`/submissions/${submission.id}/captions`)
       }).then(function(r) {

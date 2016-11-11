@@ -2,7 +2,7 @@ const AWS       = require('aws-sdk');
 const promisify = require('bluebird').Promise.promisify;
 AWS.config.update({
   credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
-  region:      'us-west-2',
+  region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
 });
 
 const client    = new AWS.DynamoDB.DocumentClient();

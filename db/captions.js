@@ -16,8 +16,13 @@ module.exports = {
   hate: hate,
 }
 
+client.query  = promisify(client.query, {context:  client});
+client.put    = promisify(client.put, {context:    client});
+client.get    = promisify(client.get, {context:    client});
+client.update = promisify(client.update, {context: client});
+
 function forSubmission(submissionId) {
-  return promisify(client.query, {context: client})({
+  return client.query({
     TableName: tableName,
     IndexName: 'submissionId-score',
     KeyConditionExpression: 'submissionId = :submissionId',
@@ -32,14 +37,14 @@ function forSubmission(submissionId) {
 }
 
 function create(caption) {
-  return promisify(client.put, {context: client})({
+  return client.put({
     TableName: tableName,
     Item: caption
   });
 }
 
 function get(id, cb) {
-  return promisify(client.get, {context: client})({
+  return client.get({
     TableName: tableName,
     Key: {
       id: id
@@ -50,7 +55,7 @@ function get(id, cb) {
 }
 
 function like(id) {
-  return promisify(client.update, {context: client})({
+  return client.update({
     TableName: tableName,
     Key: { id: id },
     UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
@@ -61,12 +66,12 @@ function like(id) {
 }
 
 function hate(id) {
-  return promisify(client.update, {context: client})({
+  return client.update({
     TableName: tableName,
     Key: { id: id },
     UpdateExpression: 'set hates = hates + :inc, score = score - :inc',
     ExpressionAttributeValues: {
       ':inc': 1,
     }
-  })
+  });
 }

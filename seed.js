@@ -1,11 +1,10 @@
 'use strict';
 
+const config  = require('config');
 const request = require('request');
 const fs      = require('fs');
 
-const baseUrl = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co':
-  'https://superserious.ngrok.io';
+const baseUrl = config.baseUrl;
 
 for( var i = 1; i <= 5; i++ ) {
   request({

@@ -3,11 +3,10 @@
 const multer      = require('multer');
 const UUID        = require('node-uuid');
 const aacDuration = require('aac-duration');
+const config      = require('../config');
 const db          = require('../db/captions');
 const submissions = require('../db/submissions');
-const baseUrl     = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co' :
-  'https://superserious.ngrok.io';
+const baseUrl     = config.baseUrl;
 
 const captionUpload = multer({
   limits: {fileSize: 1024 * 1024 * 2},
@@ -30,10 +29,10 @@ module.exports = function(app) {
   app.post('/captions/:id/hate', hate);
 }
 
-function all(req, res) {
-  const id = submissions[0].id;
-
-  db.forSubmission(id).then(function(captions) {
+function all(req, res, next) {
+  submissions.latest().then(function(s) {
+    return db.forSubmission(s.id)
+  }).then(function(captions) {
     res.json({
       captions: captions,
     })

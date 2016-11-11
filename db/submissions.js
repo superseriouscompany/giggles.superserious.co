@@ -1,23 +1,28 @@
-const AWS       = require('aws-sdk');
-const promisify = require('bluebird').Promise.promisify;
-AWS.config.update({
-  credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
-  region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
-});
-
-const client    = new AWS.DynamoDB.DocumentClient();
-const tableName = process.env.NODE_ENV == 'production' ? 'submissions' : 'submissionsStaging';
+const config         = require('../config');
+const promisify      = require('bluebird').Promise.promisify;
+const client         = new config.AWS.DynamoDB.DocumentClient();
+const lowLevelClient = new config.AWS.DynamoDB();
+const tableName      = config.submissionsTableName;
 
 module.exports = {
   create: create,
   all: all,
+  latest: latest,
   get: get,
   pick: pick,
   unpicked: unpicked,
+  count: count,
 }
 
+client.query         = promisify(client.query, {context:                 client});
+client.put           = promisify(client.put, {context:                   client});
+client.get           = promisify(client.get, {context:                   client});
+client.scan          = promisify(client.scan, {context:                  client});
+client.update        = promisify(client.update, {context:                client});
+client.describeTable = promisify(lowLevelClient.describeTable, {context: lowLevelClient});
+
 function all() {
-  return promisify(client.query, {context: client})({
+  return client.query({
     TableName: tableName,
     IndexName: 'isPublished-publishedAt',
     KeyConditionExpression: 'isPublished = :isPublished',
@@ -31,15 +36,30 @@ function all() {
   })
 }
 
+function latest() {
+  return client.query({
+    TableName: tableName,
+    IndexName: 'isPublished-publishedAt',
+    KeyConditionExpression: 'isPublished = :isPublished',
+    ScanIndexForward: false,
+    Limit: 1,
+    ExpressionAttributeValues: {
+      ':isPublished': 'yes',
+    },
+  }).then(function(payload) {
+    return payload.Items && payload.Items[0];
+  })
+}
+
 function create(submission) {
-  return promisify(client.put, {context: client})({
+  return client.put({
     TableName: tableName,
     Item: submission,
   })
 }
 
 function get(id) {
-  return promisify(client.get, {context: client})({
+  return client.get({
     TableName: tableName,
     Key: {
       id: id
@@ -50,7 +70,7 @@ function get(id) {
 }
 
 function unpicked() {
-  return promisify(client.scan, {context: client})({
+  return client.scan({
     TableName: tableName,
   }).then(function(payload) {
     return payload && payload.Items;
@@ -62,7 +82,7 @@ function unpicked() {
 
 function pick(id) {
   const now = +new Date;
-  return promisify(client.update, {context: client})({
+  return client.update({
     TableName: tableName,
     Key: { id: id },
     UpdateExpression: 'set isPublished = :true, publishedAt = :publishedAt',
@@ -71,4 +91,10 @@ function pick(id) {
       ':publishedAt': now,
     }
   });
+}
+
+function count() {
+  return client.describeTable({TableName: tableName}).then(function(payload) {
+    return payload && payload.Table && payload.Table.ItemCount;
+  })
 }

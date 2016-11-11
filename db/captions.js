@@ -1,4 +1,5 @@
-const AWS = require('aws-sdk');
+const AWS       = require('aws-sdk');
+const promisify = require('bluebird').Promise.promisify;
 AWS.config.update({
   credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
   region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
@@ -15,98 +16,57 @@ module.exports = {
   hate: hate,
 }
 
-function forSubmission(submissionId, cb) {
-  return new Promise(function(resolve, reject) {
-    client.query({
-      TableName: tableName,
-      IndexName: 'submissionId-score',
-      KeyConditionExpression: 'submissionId = :submissionId',
-      ScanIndexForward: false,
-      Limit: 1000,
-      ExpressionAttributeValues: {
-        ':submissionId': submissionId,
-      }
-    }, function(err, payload) {
-      if( err ) { return cb(err); }
-      return cb(null, payload.Items);
-    });
-
-    function cb(err, data) {
-      if( err ) { return reject(err); }
-      resolve(data);
+function forSubmission(submissionId) {
+  return promisify(client.query, {context: client})({
+    TableName: tableName,
+    IndexName: 'submissionId-score',
+    KeyConditionExpression: 'submissionId = :submissionId',
+    ScanIndexForward: false,
+    Limit: 1000,
+    ExpressionAttributeValues: {
+      ':submissionId': submissionId,
     }
+  }).then(function(payload) {
+    return payload.Items;
   })
 }
 
-function create(caption, cb) {
-  return new Promise(function(resolve, reject) {
-    client.put({
-      TableName: tableName,
-      Item: caption
-    }, cb);
-
-    function cb(err, data) {
-      if( err ) { return reject(err) }
-      resolve(data);
-    }
+function create(caption) {
+  return promisify(client.put, {context: client})({
+    TableName: tableName,
+    Item: caption
   });
 }
 
 function get(id, cb) {
-  return new Promise(function(resolve, reject) {
-    client.get({
-      TableName: tableName,
-      Key: {
-        id: id
-      }
-    }, function(err, payload) {
-      if( err ) { return cb(err); }
-      return cb(null, payload.Item);
-    });
-
-    function cb(err, data) {
-      if( err ) { return reject(err) }
-      resolve(data);
+  return promisify(client.get, {context: client})({
+    TableName: tableName,
+    Key: {
+      id: id
     }
+  }).then(function(payload) {
+    return payload.Item;
   })
 }
 
 function like(id) {
-  return new Promise(function(resolve, reject) {
-    client.update({
-      TableName: tableName,
-      Key: { id: id },
-      UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
-      ExpressionAttributeValues: {
-        ':inc': 1,
-      }
-    }, function(err, data) {
-      return cb(err, data);
-    })
-
-    function cb(err, data) {
-      if( err ) { return reject(err) }
-      resolve(data);
+  return promisify(client.update, {context: client})({
+    TableName: tableName,
+    Key: { id: id },
+    UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
+    ExpressionAttributeValues: {
+      ':inc': 1,
     }
-  })
+  });
 }
 
 function hate(id) {
-  return new Promise(function(resolve, reject) {
-    client.update({
-      TableName: tableName,
-      Key: { id: id },
-      UpdateExpression: 'set hates = hates + :inc, score = score - :inc',
-      ExpressionAttributeValues: {
-        ':inc': 1,
-      }
-    }, function(err, data) {
-      return cb(err, data);
-    })
-
-    function cb(err, data) {
-      if( err ) { return reject(err) }
-      resolve(data);
+  return promisify(client.update, {context: client})({
+    TableName: tableName,
+    Key: { id: id },
+    UpdateExpression: 'set hates = hates + :inc, score = score - :inc',
+    ExpressionAttributeValues: {
+      ':inc': 1,
     }
   })
 }

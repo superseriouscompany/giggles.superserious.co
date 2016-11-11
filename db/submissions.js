@@ -5,8 +5,9 @@ AWS.config.update({
   region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
 });
 
-const client    = new AWS.DynamoDB.DocumentClient();
-const tableName = process.env.NODE_ENV == 'production' ? 'submissions' : 'submissionsStaging';
+const client         = new AWS.DynamoDB.DocumentClient();
+const lowLevelClient = new AWS.DynamoDB();
+const tableName      = process.env.NODE_ENV == 'production' ? 'submissions': 'submissionsStaging';
 
 module.exports = {
   create: create,
@@ -14,13 +15,15 @@ module.exports = {
   get: get,
   pick: pick,
   unpicked: unpicked,
+  count: count,
 }
 
-client.query  = promisify(client.query, {context:  client});
-client.put    = promisify(client.put, {context:    client});
-client.get    = promisify(client.get, {context:    client});
-client.scan   = promisify(client.scan, {context:   client});
-client.update = promisify(client.update, {context: client});
+client.query         = promisify(client.query, {context:                 client});
+client.put           = promisify(client.put, {context:                   client});
+client.get           = promisify(client.get, {context:                   client});
+client.scan          = promisify(client.scan, {context:                  client});
+client.update        = promisify(client.update, {context:                client});
+client.describeTable = promisify(lowLevelClient.describeTable, {context: lowLevelClient});
 
 function all() {
   return client.query({
@@ -77,4 +80,10 @@ function pick(id) {
       ':publishedAt': now,
     }
   });
+}
+
+function count() {
+  return client.describeTable({TableName: tableName}).then(function(payload) {
+    return payload && payload.Table && payload.Table.ItemCount;
+  })
 }

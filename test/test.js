@@ -149,6 +149,23 @@ describe("giggles api", function () {
         expect(r.body.captions[0].id).toEqual(caption.id);
       })
     })
+
+    it("returns a caption from the latest submission", function () {
+      let submission, caption;
+
+      return factory.submission().then(function(s) {
+        submission = s;
+        return factory.caption({submissionId: s.id})
+      }).then(function(c) {
+        caption = c;
+        return api.get(`/captions`)
+      }).then(function(r) {
+        expect(r.statusCode).toEqual(200);
+        expect(r.body.captions.length).toEqual(1, 'there should have been one caption');
+        expect(r.body.captions[0].id).toEqual(caption.id);
+      })
+
+    });
   });
 
   describe("ratings", function() {

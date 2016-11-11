@@ -7,6 +7,7 @@ const tableName      = config.submissionsTableName;
 module.exports = {
   create: create,
   all: all,
+  latest: latest,
   get: get,
   pick: pick,
   unpicked: unpicked,
@@ -32,6 +33,21 @@ function all() {
     },
   }).then(function(payload) {
     return payload.Items;
+  })
+}
+
+function latest() {
+  return client.query({
+    TableName: tableName,
+    IndexName: 'isPublished-publishedAt',
+    KeyConditionExpression: 'isPublished = :isPublished',
+    ScanIndexForward: false,
+    Limit: 1,
+    ExpressionAttributeValues: {
+      ':isPublished': 'yes',
+    },
+  }).then(function(payload) {
+    return payload.Items && payload.Items[0];
   })
 }
 

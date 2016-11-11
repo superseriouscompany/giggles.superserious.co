@@ -29,10 +29,10 @@ module.exports = function(app) {
   app.post('/captions/:id/hate', hate);
 }
 
-function all(req, res) {
-  const id = submissions[0].id;
-
-  db.forSubmission(id).then(function(captions) {
+function all(req, res, next) {
+  submissions.latest().then(function(s) {
+    return db.forSubmission(s.id)
+  }).then(function(captions) {
     res.json({
       captions: captions,
     })

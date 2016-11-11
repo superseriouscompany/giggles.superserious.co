@@ -4,6 +4,7 @@ const multer      = require('multer');
 const UUID        = require('node-uuid');
 const aacDuration = require('aac-duration');
 const db          = require('../db/captions');
+const submissions = require('../db/submissions');
 const baseUrl     = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
   'https://superserious.ngrok.io';
@@ -61,30 +62,32 @@ function create(req, res, next) {
     });
   }
 
-  if( !submissions.find(function(s) { return s.id == req.params.id }) ) {
-    return res.status(400).json({
-      message: `The submission \`${req.params.id}\` does not exist.`,
-    })
-  }
-
   const uuid = UUID.v1();
 
-  let duration = 42;
-  try {
-    duration = aacDuration(`./captions/${req.file.filename}`);
-  } catch(err) {
-    console.error(err, "unable to convert", uuid);
-  }
+  submissions.get(req.params.id).then(function(s) {
+    if( !s ) {
+      return res.status(400).json({
+        message: `The submission \`${req.params.id}\` does not exist.`,
+      })
+    }
 
-  db.create({
-    id: uuid,
-    filename: req.file.filename,
-    submission_id: req.params.id,
-    duration: duration,
-    audio_url: `${baseUrl}/${req.file.filename}`,
-    likes: 0,
-    hates: 0,
-    score: 0,
+    let duration = 42;
+    try {
+      duration = aacDuration(`./captions/${req.file.filename}`);
+    } catch(err) {
+      console.error(err, "unable to convert", uuid);
+    }
+
+    return db.create({
+      id: uuid,
+      filename: req.file.filename,
+      submission_id: req.params.id,
+      duration: duration,
+      audio_url: `${baseUrl}/${req.file.filename}`,
+      likes: 0,
+      hates: 0,
+      score: 0,
+    })
   }).then(function() {
     res.status(201).json({id: uuid});
   }).catch(next);

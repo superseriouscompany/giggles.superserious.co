@@ -129,7 +129,7 @@ describe("giggles api", function () {
       });
     });
 
-    it("allows uploading a valid caption and creates a uuid", function() {
+    it("200s when uploading a valid caption and creates a uuid", function() {
       const formData = {
         audio: fs.createReadStream(__dirname + '/fixtures/lawng.aac'),
       }

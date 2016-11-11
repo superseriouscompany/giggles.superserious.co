@@ -44,7 +44,7 @@ function get(id) {
       id: id
     }
   }).then(function(payload) {
-    return payload.Item;
+    return payload && payload.Item;
   });
 }
 

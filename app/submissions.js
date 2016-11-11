@@ -80,44 +80,41 @@ function jumpQueueIOS(req, res, next) {
     return res.status(400).json({message: 'You must provide the Apple `receipt` in your request body.'});
   }
 
-  let submissionIndex;
-  for( var i = 0; i < queue.length; i++ ) {
-    if( queue[i].id == req.params.id ) {
-      submissionIndex = i;
-    }
-  }
-  if( submissionIndex === undefined ) {
-    return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
-  }
-
-  let client;
-  if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
-    client = new IAPVerifier();
-    client.stubUrl = 'http://localhost:3001';
-    client.stubBody = req.body.stubBody || {};
-  } else {
-    client = iapClient;
-  }
-
-  client.verifyReceipt(receipt, true, function(valid, msg, payload) {
-    if( !valid ) {
-      console.error(msg, payload);
-      return res.status(403).json({error: msg});
+  db.get(req.params.id).then(function(s) {
+    if(!s) {
+      return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
     }
 
-    if( !payload.receipt || !payload.receipt.in_app || !payload.receipt.in_app[0] ) {
-      console.warn(payload);
-      return next(new Error('Invalid payload from apple servers'));
+    let client;
+    if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
+      client = new IAPVerifier();
+      client.stubUrl = 'http://localhost:3001';
+      client.stubBody = req.body.stubBody || {};
+    } else {
+      client = iapClient;
     }
 
-    if( !payload.receipt.in_app || payload.receipt.in_app[0].product_id != 'com.superserious.giggles.now' ) {
-      console.warn(payload);
-      return res.status(403).json({error: "You have not purchased a pass to skip the line"});
-    }
+    return client.verifyReceipt(receipt, true, function(valid, msg, payload) {
+      if( !valid ) {
+        console.error(msg, payload);
+        return res.status(403).json({error: msg});
+      }
 
-    choose(submissionIndex);
-    return res.sendStatus(204);
-  })
+      if( !payload.receipt || !payload.receipt.in_app || !payload.receipt.in_app[0] ) {
+        console.warn(payload);
+        return next(new Error('Invalid payload from apple servers'));
+      }
+
+      if( !payload.receipt.in_app || payload.receipt.in_app[0].product_id != 'com.superserious.giggles.now' ) {
+        console.warn(payload);
+        return res.status(403).json({error: "You have not purchased a pass to skip the line"});
+      }
+
+      return db.pick(req.params.id).then(function() {
+        return res.sendStatus(204);
+      })
+    })
+  }).catch(next);
 }
 
 function jumpQueueAndroid(req, res, next) {
@@ -129,47 +126,42 @@ function jumpQueueAndroid(req, res, next) {
     return res.status(400).json({message: 'You must provide the google `purchaseToken` in your request body.'});
   }
 
-  let submissionIndex;
-  for( var i = 0; i < queue.length; i++ ) {
-    if( queue[i].id == req.params.id ) {
-      submissionIndex = i;
-    }
-  }
-  if( submissionIndex === undefined ) {
-    return res.status(410).json({message: `\`${req.params.id}\` does not exist.`});
-  }
+  db.get(req.params.id).then(function(s) {
+    if( !s ) { return res.status(410).json({message: `\`${req.params.id}\` does not exist.`}); }
+    const baseUrl = process.env.NODE_ENV != 'production' && req.query.stubPort ?
+      `http://localhost:${req.query.stubPort}` :
+      'https://www.googleapis.com';
 
-  const baseUrl = process.env.NODE_ENV != 'production' && req.query.stubPort ?
-    `http://localhost:${req.query.stubPort}` :
-    'https://www.googleapis.com';
+    request.post('https://accounts.google.com/o/oauth2/token', {
+      form: {
+        grant_type: 'refresh_token',
+        client_id: '404145724987-sj8luhbbehlnls7in58n5t9fdpl6n6qu.apps.googleusercontent.com',
+        client_secret: 'w-NPd4WDoSXGV_oIyGdr31eI',
+        refresh_token: '1/_1pmxC4tVeTclcsCNyBUsPaWHYTefGgAdt1xalQ1xqU',
+      },
+      json: true,
+    }).then(function(body) {
+      const accessToken = body.access_token;
+      let url = `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`
 
-  request.post('https://accounts.google.com/o/oauth2/token', {
-    form: {
-      grant_type: 'refresh_token',
-      client_id: '404145724987-sj8luhbbehlnls7in58n5t9fdpl6n6qu.apps.googleusercontent.com',
-      client_secret: 'w-NPd4WDoSXGV_oIyGdr31eI',
-      refresh_token: '1/_1pmxC4tVeTclcsCNyBUsPaWHYTefGgAdt1xalQ1xqU',
-    },
-    json: true,
-  }).then(function(body) {
-    const accessToken = body.access_token;
-    let url = `${baseUrl}/androidpublisher/v2/applications/${bundleId}/purchases/products/${productId}/tokens/${purchaseToken}?access_token=${accessToken}`
+      if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
+        if( req.query.stubStatus ) url += `&status=${req.query.stubStatus}`;
+        return request.patch(url, { json: true, body: req.body.stubBody });
+      }
 
-    if( process.env.NODE_ENV != 'production' && req.query.stubPort ) {
-      if( req.query.stubStatus ) url += `&status=${req.query.stubStatus}`;
-      return request.patch(url, { json: true, body: req.body.stubBody });
-    }
+      return request(url, {json: true});
+    }).then(function(body) {
+      if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
+      if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
 
-    return request(url, {json: true});
-  }).then(function(body) {
-    if( body.purchaseState !== 0 ) { throw new Error('purchaseState is invalid'); }
-    if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
+      return db.pick(req.params.id).then(function() {
+        return res.sendStatus(204);
+      })
+    }).catch(function(err) {
+      next(err);
+    })
+  }).catch(next);
 
-    choose(submissionIndex);
-    return res.sendStatus(204);
-  }).catch(function(err) {
-    next(err);
-  })
 }
 
 function report(req, res, next) {

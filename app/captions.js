@@ -99,7 +99,7 @@ function like(req, res, next) {
   }).catch(next);
 }
 
-function hate(req, res) {
+function hate(req, res, next) {
   db.hate(req.params.id).then(function() {
     res.sendStatus(204);
   }).catch(next);

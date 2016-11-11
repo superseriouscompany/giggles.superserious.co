@@ -76,7 +76,10 @@ function like(id) {
     client.update({
       TableName: tableName,
       Key: { id: id },
-      UpdateExpression: 'set likes = likes + 1, score = score + 1',
+      UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
+      ExpressionAttributeValues: {
+        ':inc': 1,
+      }
     }, function(err, data) {
       return cb(err, data);
     })
@@ -93,7 +96,10 @@ function hate(id) {
     client.update({
       TableName: tableName,
       Key: { id: id },
-      UpdateExpression: 'set likes = likes + 1, score = score + 1',
+      UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
+      ExpressionAttributeValues: {
+        ':inc': 1,
+      }
     }, function(err, data) {
       return cb(err, data);
     })

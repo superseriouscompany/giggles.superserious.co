@@ -170,14 +170,14 @@ describe("giggles api", function () {
 
     describe("likes", function() {
       it("400s if caption is not found", function() {
-        api.post('/captions/nope/like').then(shouldFail).catch(function(err) {
+        return api.post('/captions/nope/like').then(shouldFail).catch(function(err) {
           expect(err.statusCode).toEqual(400);
           expect(err.response.body).toMatch(/doesn't exist/);
         })
       });
 
       it("204s on success", function() {
-        api.post(`/captions/${caption.id}/like`).then(function(r) {
+        return api.post(`/captions/${caption.id}/like`).then(function(r) {
           expect(r.statusCode).toEqual(204);
         })
       })

@@ -96,7 +96,7 @@ function hate(id) {
     client.update({
       TableName: tableName,
       Key: { id: id },
-      UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
+      UpdateExpression: 'set hates = hates + :inc, score = score - :inc',
       ExpressionAttributeValues: {
         ':inc': 1,
       }

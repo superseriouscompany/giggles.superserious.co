@@ -96,11 +96,23 @@ function create(req, res, next) {
 function like(req, res, next) {
   db.like(req.params.id).then(function() {
     res.sendStatus(204);
-  }).catch(next);
+  }).catch(function(err) {
+    if( err.message == 'The provided expression refers to an attribute that does not exist in the item' ) {
+      return res.status(400).json({message: `caption \`${req.params.id}\` does not exist`})
+    }
+
+    return next(err);
+  });
 }
 
 function hate(req, res, next) {
   db.hate(req.params.id).then(function() {
     res.sendStatus(204);
-  }).catch(next);
+  }).catch(function(err) {
+    if( err.message == 'The provided expression refers to an attribute that does not exist in the item' ) {
+      return res.status(400).json({message: `caption \`${req.params.id}\` does not exist`})
+    }
+
+    return next(err);
+  });
 }

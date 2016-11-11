@@ -6,6 +6,7 @@ const IAPVerifier = require('iap_verifier');
 const sizeOf      = require('image-size');
 const UUID        = require('node-uuid');
 const db          = require('../db/submissions');
+const client      = require('../db/client');
 const iapClient   = new IAPVerifier();
 const baseUrl     = process.env.NODE_ENV == 'production' ?
   'https://giggles.superserious.co' :
@@ -68,8 +69,14 @@ function create(req, res, next) {
     isPublished: 'no',
     publishedAt: 0,
   }).then(function() {
-    // FIXME: queueSize
-    res.status(201).json({id: uuid, queueSize: 420});
+    client.describeTable({TableName: 'submissionsStaging'}, function(err, response) {
+      let queueSize;
+      if( err ) { console.error(err, err.stack); queueSize = 69; }
+      if( !response || !response.Table || !response.Table.ItemCount ) { queueSize = 69; }
+      else { queueSize = response.Table.ItemCount; }
+
+      res.status(201).json({id: uuid, queueSize: queueSize});
+    })
   }).catch(next);
 }
 

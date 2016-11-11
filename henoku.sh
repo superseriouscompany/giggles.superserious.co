@@ -36,7 +36,7 @@ ssh "$ROOT"@"$HOST" sudo ufw allow 22
 ssh "$ROOT"@"$HOST" sudo ufw allow 80
 ssh "$ROOT"@"$HOST" sudo ufw allow 443
 ssh "$ROOT"@"$HOST" sudo ufw disable
-ssh "$ROOT"@"$HOST" sudo ufw enable
+ssh "$ROOT"@"$HOST" sudo ufw enable -y
 
 # Install nodejs
 echo "Installing nodejs..."

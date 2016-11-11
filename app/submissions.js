@@ -172,30 +172,17 @@ function jumpQueueAndroid(req, res, next) {
   })
 }
 
-function report(req, res) {
+function report(req, res, next) {
   res.sendStatus(204);
 }
 
-function choose(index) {
-  let chosenOne = queue.splice(index, 1)[0];
-  chosenOne.publishedAt = +new Date;
-  submissions.unshift(chosenOne);
-}
+function pick(req, res, next) {
+  const getId = req.body.id ? Promise.resolve(req.body.id) : db.unpicked();
 
-function pick(req, res) {
-  if( !queue.length ) { return res.status(400).json({message: 'Queue empty'}) }
-
-  if( !req.body.id ) {
-    choose(Math.random() * (queue.length - 1));
-    return res.sendStatus(204);
-  }
-
-  for( var i = 0; i < queue.length; i++ ) {
-    if( queue[i].id == req.body.id ) {
-      choose(i);
-      return res.sendStatus(204);
-    }
-  }
-
-  return res.status(400).json({message: `\`${req.body.id}\` was not found in the submissions queue.`});
+  getId.then(function(id) {
+    if( !id ) { return res.status(400).json({message: 'Queue empty'}) }
+    return db.pick(id);
+  }).then(function() {
+    res.sendStatus(204);
+  }).catch(next);
 }

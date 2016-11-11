@@ -53,6 +53,10 @@ function pick(id) {
   return promisify(client.update, {context: client})({
     TableName: tableName,
     Key: { id: id },
-    UpdateExpression: 'set isPromoted = :true, score = score + 1',
+    UpdateExpression: 'set isPublished = :true, publishedAt = :publishedAt',
+    ExpressionAttributeValues: {
+      ':true': 'yes',
+      ':publishedAt': now,
+    }
   });
 }

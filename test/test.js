@@ -16,7 +16,8 @@ const api = request.defaults({
 })
 
 describe("giggles api", function () {
-  this.timeout(5000);
+  this.timeout(10000);
+  this.slow(500);
 
   let stubClose;
 
@@ -60,7 +61,7 @@ describe("giggles api", function () {
       })
     });
 
-    it("allows uploading a valid submission and creates a uuid", function () {
+    it("200s when uploading a valid submission and creates a uuid", function () {
       const formData = {
         photo: fs.createReadStream(__dirname + '/fixtures/photo.jpg'),
       };

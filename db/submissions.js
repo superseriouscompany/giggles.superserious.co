@@ -6,7 +6,7 @@ AWS.config.update({
 });
 
 const client    = new AWS.DynamoDB.DocumentClient();
-const tableName = 'submissionsStaging';
+const tableName = process.env.NODE_ENV == 'production' ? 'submissions' : 'submissionsStaging';
 
 module.exports = {
   create: create,

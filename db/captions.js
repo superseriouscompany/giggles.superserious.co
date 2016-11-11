@@ -5,7 +5,7 @@ AWS.config.update({
 });
 
 const client    = new AWS.DynamoDB.DocumentClient();
-const tableName = 'captionsStaging';
+const tableName = process.env.NODE_ENV == 'production' ? 'captions' : 'captionsStaging';
 
 module.exports = {
   create: create,

@@ -69,7 +69,8 @@ function create(req, res, next) {
     isPublished: 'no',
     publishedAt: 0,
   }).then(function() {
-    client.describeTable({TableName: 'submissionsStaging'}, function(err, response) {
+    const tableName = process.env.NODE_ENV == 'production' ? 'submissions' : 'submissionsStaging';
+    client.describeTable({TableName: tableName}, function(err, response) {
       let queueSize;
       if( err ) { console.error(err, err.stack); queueSize = 69; }
       if( !response || !response.Table || !response.Table.ItemCount ) { queueSize = 69; }

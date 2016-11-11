@@ -1,6 +1,6 @@
 module.exports = {
   submissions: {
-    "TableName": "submissionsStaging",
+    "TableName": process.env.NODE_ENV == 'production' ? 'submission' : 'submissionsStaging',
     "AttributeDefinitions":[
       {
         "AttributeName":"id",
@@ -50,7 +50,7 @@ module.exports = {
   },
 
   captions: {
-    "TableName": "captionsStaging",
+    "TableName": process.env.NODE_ENV == 'production' ? 'captions' : 'captionsStaging',
     "AttributeDefinitions":[
       {
         "AttributeName":"id",

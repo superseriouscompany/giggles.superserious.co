@@ -45,11 +45,8 @@ function killSwitch(req, res) {
   })
 }
 
-function flush(req, res) {
+function flush(req, res, next) {
   if( process.env.NODE_ENV == 'production' ) { return res.sendStatus(403); }
 
-  captions = [];
-  submissions = [];
-  queue = [];
-  res.sendStatus(204);
+  return res.sendStatus(204);
 }

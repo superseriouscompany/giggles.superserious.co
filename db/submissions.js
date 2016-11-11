@@ -13,6 +13,7 @@ module.exports = {
   all: all,
   get: get,
   pick: pick,
+  unpicked: unpicked,
 }
 
 function all() {
@@ -46,6 +47,17 @@ function get(id) {
   }).then(function(payload) {
     return payload && payload.Item;
   });
+}
+
+function unpicked() {
+  return promisify(client.scan, {context: client})({
+    TableName: tableName,
+  }).then(function(payload) {
+    return payload && payload.Items;
+  }).then(function(submissions) {
+    if( !submissions || !submissions.length ) { return null; }
+    return submissions[Math.floor(Math.random()*submissions.length)].id;
+  })
 }
 
 function pick(id) {

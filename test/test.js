@@ -273,7 +273,7 @@ describe("giggles api", function () {
       return api({url: '/all', method: 'DELETE'}).then(function() {
         return api.post('/next');
       }).then(shouldFail).catch(function(err) {
-        expect(err.statusCode).toEqual(400);
+        expect(err.statusCode).toEqual(400, 'flush doesnt work anymore');
         expect(err.response.body.message).toMatch('empty');
       })
     });

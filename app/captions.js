@@ -81,7 +81,7 @@ function create(req, res, next) {
     return db.create({
       id: uuid,
       filename: req.file.filename,
-      submission_id: req.params.id,
+      submissionId: req.params.id,
       duration: duration,
       audio_url: `${baseUrl}/${req.file.filename}`,
       likes: 0,

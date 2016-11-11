@@ -5,11 +5,10 @@ const request     = require('request-promise');
 const IAPVerifier = require('iap_verifier');
 const sizeOf      = require('image-size');
 const UUID        = require('node-uuid');
+const config      = require('../config');
 const db          = require('../db/submissions');
 const iapClient   = new IAPVerifier();
-const baseUrl     = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co' :
-  'https://superserious.ngrok.io';
+const baseUrl     = config.baseUrl;
 
 let upload = multer({
   limits: {fileSize: 1024 * 1024 * 2},
@@ -68,7 +67,6 @@ function create(req, res, next) {
     isPublished: 'no',
     publishedAt: 0,
   }).then(function() {
-    const tableName = process.env.NODE_ENV == 'production' ? 'submissions' : 'submissionsStaging';
     return db.count().then(function(queueSize) {
       res.status(201).json({id: uuid, queueSize: queueSize || 69});
     }).catch(function(err) {

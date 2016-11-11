@@ -3,11 +3,9 @@
 const request = require('request-promise'),
       fs      = require('fs'),
       expect  = require('expect'),
+      config  = require('../config'),
+      baseUrl = process.env.NODE_ENV == 'production' ? config.baseUrl : 'http://localhost:3000',
       stub    = require('./stub');
-
-const baseUrl = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co' :
-  'http://localhost:3000';
 
 const api = request.defaults({
   baseUrl: baseUrl,

@@ -1,13 +1,8 @@
-const AWS       = require('aws-sdk');
-const promisify = require('bluebird').Promise.promisify;
-AWS.config.update({
-  credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
-  region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
-});
-
-const client         = new AWS.DynamoDB.DocumentClient();
-const lowLevelClient = new AWS.DynamoDB();
-const tableName      = process.env.NODE_ENV == 'production' ? 'submissions': 'submissionsStaging';
+const config         = require('../config');
+const promisify      = require('bluebird').Promise.promisify;
+const client         = new config.AWS.DynamoDB.DocumentClient();
+const lowLevelClient = new config.AWS.DynamoDB();
+const tableName      = config.submissionsTableName;
 
 module.exports = {
   create: create,

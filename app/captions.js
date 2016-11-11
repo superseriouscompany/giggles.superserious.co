@@ -3,11 +3,10 @@
 const multer      = require('multer');
 const UUID        = require('node-uuid');
 const aacDuration = require('aac-duration');
+const config      = require('../config');
 const db          = require('../db/captions');
 const submissions = require('../db/submissions');
-const baseUrl     = process.env.NODE_ENV == 'production' ?
-  'https://giggles.superserious.co' :
-  'https://superserious.ngrok.io';
+const baseUrl     = config.baseUrl;
 
 const captionUpload = multer({
   limits: {fileSize: 1024 * 1024 * 2},

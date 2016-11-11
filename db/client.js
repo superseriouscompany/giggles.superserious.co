@@ -1,7 +1,3 @@
-const AWS = require('aws-sdk');
-AWS.config.update({
-  credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
-  region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
-});
+const config = require('../config');
 
-module.exports = new AWS.DynamoDB();
+module.exports = new config.AWS.DynamoDB();

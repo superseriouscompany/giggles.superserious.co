@@ -1,12 +1,7 @@
-const AWS       = require('aws-sdk');
+const config    = require('../config');
 const promisify = require('bluebird').Promise.promisify;
-AWS.config.update({
-  credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
-  region:      process.env.NODE_ENV == 'production' ? 'us-west-2' : 'eu-west-1',
-});
-
-const client    = new AWS.DynamoDB.DocumentClient();
-const tableName = process.env.NODE_ENV == 'production' ? 'captions' : 'captionsStaging';
+const client    = new config.AWS.DynamoDB.DocumentClient();
+const tableName = config.captionsTableName;
 
 module.exports = {
   create: create,

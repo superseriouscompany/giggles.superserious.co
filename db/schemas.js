@@ -1,6 +1,8 @@
+const config = require('../config');
+
 module.exports = {
   submissions: {
-    "TableName": process.env.NODE_ENV == 'production' ? 'submission' : 'submissionsStaging',
+    "TableName": config.submissionsTableName,
     "AttributeDefinitions":[
       {
         "AttributeName":"id",
@@ -50,7 +52,7 @@ module.exports = {
   },
 
   captions: {
-    "TableName": process.env.NODE_ENV == 'production' ? 'captions' : 'captionsStaging',
+    "TableName": config.captionsTableName,
     "AttributeDefinitions":[
       {
         "AttributeName":"id",

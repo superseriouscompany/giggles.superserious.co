@@ -16,8 +16,14 @@ module.exports = {
   unpicked: unpicked,
 }
 
+client.query  = promisify(client.query, {context:  client});
+client.put    = promisify(client.put, {context:    client});
+client.get    = promisify(client.get, {context:    client});
+client.scan   = promisify(client.scan, {context:   client});
+client.update = promisify(client.update, {context: client});
+
 function all() {
-  return promisify(client.query, {context: client})({
+  return client.query({
     TableName: tableName,
     IndexName: 'isPublished-publishedAt',
     KeyConditionExpression: 'isPublished = :isPublished',
@@ -32,14 +38,14 @@ function all() {
 }
 
 function create(submission) {
-  return promisify(client.put, {context: client})({
+  return client.put({
     TableName: tableName,
     Item: submission,
   })
 }
 
 function get(id) {
-  return promisify(client.get, {context: client})({
+  return client.get({
     TableName: tableName,
     Key: {
       id: id
@@ -50,7 +56,7 @@ function get(id) {
 }
 
 function unpicked() {
-  return promisify(client.scan, {context: client})({
+  return client.scan({
     TableName: tableName,
   }).then(function(payload) {
     return payload && payload.Items;
@@ -62,7 +68,7 @@ function unpicked() {
 
 function pick(id) {
   const now = +new Date;
-  return promisify(client.update, {context: client})({
+  return client.update({
     TableName: tableName,
     Key: { id: id },
     UpdateExpression: 'set isPublished = :true, publishedAt = :publishedAt',

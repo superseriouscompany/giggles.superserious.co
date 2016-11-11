@@ -10,7 +10,8 @@ module.exports = Object.assign({
 }, require(`./${environment}`));
 
 AWS.config.update({
-  credentials: new AWS.SharedIniFileCredentials({profile: 'gigglesDynamo'}),
+  accessKeyId: 'AKIAJQKOUQXLVMDYGWHQ',
+  secretAccessKey: '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',
   region:      module.exports.awsRegion,
 });
 

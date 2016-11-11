@@ -28,3 +28,8 @@ Production Deployment:
 Production Restart:
 
     $ ./systemctl restart
+
+Things that make the production server a snowflake:
+
+* sudo ln -s /usr/bin/nodejs /usr/bin/node
+* adding aws credentials

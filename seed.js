@@ -12,7 +12,7 @@ for( var i = 1; i <= 5; i++ ) {
     method: 'POST',
     url: `${baseUrl}/submissions`,
     formData: {
-      photo: fs.createReadStream(`./fixtures/photo${i}.jpg`)
+      photo: fs.createReadStream(`./test/fixtures/photo${i}.jpg`)
     }
   }, function(err, resp, body) {
     if( err ) { throw err; }

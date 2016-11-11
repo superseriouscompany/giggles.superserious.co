@@ -12,6 +12,10 @@ Running in development:
 
     $ npm run dev
 
+Serving development server to development client (after `brew install ngrok`):
+
+    $ ngrok http -subdomain=superserious 3000
+
 Testing:
 
     $ npm test

@@ -18,6 +18,8 @@
   "license": "MIT",
   "dependencies": {
     "aac-duration": "0.0.1",
+    "aws-sdk": "^2.6.15",
+    "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "iap_verifier": "git@github.com:superseriouscompany/iap_verifier.git",

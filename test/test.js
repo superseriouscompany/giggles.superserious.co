@@ -326,7 +326,7 @@ describe("giggles api", function () {
   describe("registering push tokens", function() {
     describe("iOS", function() {
       it("204s blindly", function () {
-        return api.post(`/ios/push_tokens`).then(function(r) {
+        return api.post(`/ios/pushTokens`).then(function(r) {
           expect(r.statusCode).toEqual(204);
         })
       });
@@ -334,7 +334,7 @@ describe("giggles api", function () {
 
     describe("Android", function() {
       it("204s blindly", function () {
-        return api.post(`/android/push_tokens`).then(function(r) {
+        return api.post(`/android/pushTokens`).then(function(r) {
           expect(r.statusCode).toEqual(204);
         })
       });

@@ -323,6 +323,24 @@ describe("giggles api", function () {
     });
   });
 
+  describe("registering push tokens", function() {
+    describe("iOS", function() {
+      it("204s blindly", function () {
+        return api.post(`/ios/push_tokens`).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+        })
+      });
+    })
+
+    describe("Android", function() {
+      it("204s blindly", function () {
+        return api.post(`/android/push_tokens`).then(function(r) {
+          expect(r.statusCode).toEqual(204);
+        })
+      });
+    })
+  })
+
   describe("jumping the queue", function() {
     describe("iOS", function() {
       let queuedSubmission;

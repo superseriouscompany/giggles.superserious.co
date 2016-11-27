@@ -13,6 +13,7 @@ app.use(express.static('submissions', {maxAge: 86400000}));
 // endpoints
 require('./app/submissions')(app);
 require('./app/captions')(app);
+require('./app/tokens')(app);
 
 // administrative endpoints
 app.get('/', ping);

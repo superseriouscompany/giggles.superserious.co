@@ -1,5 +1,6 @@
-const fs  = require('fs');
-const api = require('./api');
+const fs   = require('fs');
+const api  = require('./api');
+const UUID = require('node-uuid');
 
 const factory = {
   submission: function(params) {
@@ -49,6 +50,23 @@ const factory = {
         return Object.assign(r.body, {submissionId: submissionId});
       });
     });
+  },
+
+  deviceToken: function(params) {
+    params = Object.assign({
+      deviceId: UUID.v1(),
+      token:    UUID.v1(),
+    }, params);
+
+    return api.post({
+      url: `/ios/pushTokens`,
+      headers: {
+        'x-device-id': params.deviceId,
+      },
+      body: {
+        token: params.deviceToken,
+      }
+    })
   }
 }
 

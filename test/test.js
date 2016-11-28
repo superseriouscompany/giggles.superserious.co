@@ -189,7 +189,7 @@ describe("giggles api", function () {
           deviceToken = dt;
           return factory.caption({deviceId: 'abc'})
         }).then(function(c) {
-          return api.post(`/captions/${caption.id}`);
+          return api.post(`/captions/${caption.id}/like`);
         }).then(function() {
           setTimeout(function() {
             const call = stubHandle.calls[0];

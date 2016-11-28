@@ -181,6 +181,25 @@ describe("giggles api", function () {
         })
       })
 
+      it("notifies the creator", function(done) {
+        let submission, deviceToken;
+
+        factory.deviceToken({deviceId: 'abc'}).then(function(dt) {
+          deviceToken = dt;
+          return factory.caption({deviceId: 'abc'})
+        }).then(function(c) {
+          return api.post(`/captions/${caption.id}`);
+        }).then(function() {
+          setTimeout(function() {
+            const call = stubHandle.calls[0];
+            expect(call).toExist();
+            expect(call.body.to).toEqual(deviceToken);
+            expect(call.body.notification.body).toEqual('Someone liked your caption. You have value.');
+            done();
+          }, 100);
+        }).catch(done);
+      });
+
       it("is reflected on caption", function() {
         let caption;
         return factory.caption().then(function(c) {

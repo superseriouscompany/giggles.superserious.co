@@ -1,26 +1,18 @@
 'use strict';
 
-const request = require('request-promise'),
-      fs      = require('fs'),
-      expect  = require('expect'),
-      config  = require('../config'),
-      baseUrl = process.env.NODE_ENV == 'production' ? config.baseUrl : 'http://localhost:3000',
-      stub    = require('./stub');
-
-const api = request.defaults({
-  baseUrl: baseUrl,
-  json: true,
-  resolveWithFullResponse: true,
-})
+const fs      = require('fs');
+const expect  = require('expect');
+const stub    = require('./stub');
+const api     = require('./api');
 
 describe("giggles api", function () {
-  this.timeout(10000);
+  this.timeout(10000); // dynamodb latency :eyeroll:
   this.slow(2000);
 
-  let stubClose;
+  let stubHandle;
 
   before(function() {
-    stubClose = stub(3001);
+    stubHandle = stub(3001);
 
     return api('/').catch(function(err) {
       console.error(`API is not running at ${baseUrl}`);
@@ -29,7 +21,7 @@ describe("giggles api", function () {
   });
 
   after(function() {
-    stubClose();
+    stubHandle();
   });
 
   describe('submission', function() {
@@ -305,6 +297,23 @@ describe("giggles api", function () {
       });
     });
 
+    it("notifies firebase topic on selection", function (done) {
+      factory.queuedSubmission().then(function() {
+        return api.post('/next?stubPort=3001')
+      }).then(function() {
+        // notify is fire and forget so we need to wait for the call to be received
+        setTimeout(function() {
+          const call = stubHandle.calls[0];
+          expect(call).toExist();
+          expect(call.url).toEqual('/fcm/send');
+          expect(call.body.to).toEqual('/topics/all');
+          expect(call.body.priority).toEqual('high');
+          expect(call.body.notification.body).toEqual('Everything is dumb.');
+          done();
+        }, 100);
+      }).catch(done);
+    });
+
     it("selects an image with the given ID", function() {
       let submission;
       return factory.queuedSubmission().then(function(s) {
@@ -520,7 +529,6 @@ const factory = {
   },
 
   caption: function(params) {
-    // TODO: allow adding caption to existing submission
     params = Object.assign({
       submissionId: null,
       audio: fs.createReadStream(`${__dirname}/fixtures/lawng.aac`),

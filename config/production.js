@@ -3,4 +3,5 @@ module.exports = {
   awsRegion: 'us-west-2',
   submissionsTableName: 'submissions',
   captionsTableName: 'captions',
+  usersTableName: 'users',
 }

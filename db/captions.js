@@ -56,7 +56,8 @@ function like(id) {
     UpdateExpression: 'set likes = likes + :inc, score = score + :inc',
     ExpressionAttributeValues: {
       ':inc': 1,
-    }
+    },
+    ReturnValues: 'ALL_OLD',
   });
 }
 

@@ -7,3 +7,5 @@ module.exports = request.defaults({
   json: true,
   resolveWithFullResponse: true,
 })
+
+module.exports.baseUrl = baseUrl;

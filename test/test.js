@@ -15,7 +15,7 @@ describe("giggles api", function () {
     stubHandle = stub(3001);
 
     return api('/').catch(function(err) {
-      console.error(`API is not running at ${baseUrl}`);
+      console.error(`API is not running at ${api.baseUrl}`);
       process.exit(1);
     })
   });

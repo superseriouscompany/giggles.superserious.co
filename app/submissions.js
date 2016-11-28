@@ -7,6 +7,7 @@ const sizeOf      = require('image-size');
 const UUID        = require('node-uuid');
 const config      = require('../config');
 const db          = require('../db/submissions');
+const notify      = require('../lib/notify');
 const iapClient   = new IAPVerifier();
 const baseUrl     = config.baseUrl;
 
@@ -158,6 +159,7 @@ function jumpQueueAndroid(req, res, next) {
       if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
 
       return db.pick(req.params.id).then(function() {
+        notify.topic('all', 'Everything is dumb.');
         return res.sendStatus(204);
       })
     }).catch(function(err) {
@@ -178,6 +180,7 @@ function pick(req, res, next) {
     if( !id ) { return res.status(400).json({message: 'Queue empty'}) }
     return db.pick(id);
   }).then(function() {
+    notify.topic('all', 'Everything is dumb.');
     res.sendStatus(204);
   }).catch(next);
 }

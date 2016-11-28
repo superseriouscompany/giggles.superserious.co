@@ -6,6 +6,7 @@ const aacDuration = require('aac-duration');
 const config      = require('../config');
 const db          = require('../db/captions');
 const submissions = require('../db/submissions');
+const notify      = require('../lib/notify');
 const baseUrl     = config.baseUrl;
 
 const captionUpload = multer({
@@ -94,6 +95,7 @@ function create(req, res, next) {
 
 function like(req, res, next) {
   db.like(req.params.id).then(function() {
+    notify.device('nope', 'Someone liked your caption. You have value.', !!req.query.stubPort);
     res.sendStatus(204);
   }).catch(function(err) {
     if( err.message == 'The provided expression refers to an attribute that does not exist in the item' ) {

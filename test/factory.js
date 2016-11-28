@@ -66,6 +66,8 @@ const factory = {
       body: {
         token: params.deviceToken,
       }
+    }).then(function() {
+      return params.token;
     })
   }
 }

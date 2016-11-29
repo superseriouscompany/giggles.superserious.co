@@ -104,7 +104,6 @@ function create(req, res, next) {
 function like(req, res, next) {
   db.like(req.params.id).then(function(c) {
     res.sendStatus(204);
-    console.log("found caption", c);
     if( !c || !c.deviceId ) { return; }
     users.findByDeviceId(c.deviceId).then(function(u) {
       notify.device(u.token, 'Someone liked your caption. You have value.', !!req.query.stubPort);

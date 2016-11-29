@@ -17,7 +17,6 @@ function iOSRegisterToken(req, res, next) {
     token: req.body.token,
     platform: 'iOS',
   }).then(function() {
-    console.log("registered ios token", req.body.token);
     res.status(201).json({id: uuid});
   }).catch(next);
 }
@@ -31,7 +30,6 @@ function androidRegisterToken(req, res, next) {
     token: req.body.token,
     platform: 'Android',
   }).then(function() {
-    console.log("registered android token", req.body.token);
     res.status(201).json({id: uuid});
   }).catch(next);
 }

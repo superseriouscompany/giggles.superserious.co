@@ -22,6 +22,7 @@ describe("giggles api", function () {
   });
 
   after(function() {
+    console.log("shutting down stub server");
     stubHandle();
   });
 
@@ -354,17 +355,23 @@ describe("giggles api", function () {
 
   describe("registering push tokens", function() {
     describe("iOS", function() {
-      it("204s blindly", function () {
-        return api.post(`/ios/pushTokens`).then(function(r) {
-          expect(r.statusCode).toEqual(204);
+      it("201s with id", function () {
+        return api.post(`/ios/pushTokens`, {
+          body: { token: 'abc123' },
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(201);
+          expect(r.body.id).toExist();
         })
       });
     })
 
     describe("Android", function() {
-      it("204s blindly", function () {
-        return api.post(`/android/pushTokens`).then(function(r) {
-          expect(r.statusCode).toEqual(204);
+      it("201s with id", function () {
+        return api.post(`/android/pushTokens`, {
+          body: { token: 'def456' },
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(201);
+          expect(r.body.id).toExist();
         })
       });
     })

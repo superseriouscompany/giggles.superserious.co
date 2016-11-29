@@ -22,14 +22,16 @@ function iOSRegisterToken(req, res, next) {
   }).catch(next);
 }
 
-function androidRegisterToken(req, res) {
+function androidRegisterToken(req, res, next) {
+  const uuid = UUID.v1();
+
   db.create({
     id: uuid,
     deviceId: req.get('x-device-id'),
     token: req.body.token,
     platform: 'Android',
   }).then(function() {
-    console.log("registered ios token", req.body.token);
+    console.log("registered android token", req.body.token);
     res.status(201).json({id: uuid});
   }).catch(next);
 }

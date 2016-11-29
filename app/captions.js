@@ -83,7 +83,6 @@ function create(req, res, next) {
       console.error(err, "unable to convert", uuid);
     }
 
-    console.log("Found", u, "from", deviceId);
     return db.create({
       id: uuid,
       filename: req.file.filename,

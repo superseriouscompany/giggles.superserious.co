@@ -3,10 +3,10 @@ const promisify      = require('bluebird').Promise.promisify;
 const client         = new config.AWS.DynamoDB.DocumentClient();
 const tableName      = config.usersTableName;
 
-module.exports = {
-  create: create,
+module.exports  = {
+  create:         create,
   findByDeviceId: findByDeviceId,
-  get: get,
+  get:            get,
 }
 
 client.put   = promisify(client.put, {context:   client});

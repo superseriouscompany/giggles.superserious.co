@@ -198,7 +198,7 @@ describe("giggles api", function () {
             expect(call.body.notification.body).toEqual('Someone liked your caption. You have value.');
             expect(call.body.to).toEqual(deviceToken);
             done();
-          }, 100);
+          }, 1000);
         }).catch(done);
       });
 

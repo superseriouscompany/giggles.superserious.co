@@ -14,7 +14,8 @@ client.query = promisify(client.query, {context: client});
 client.get   = promisify(client.get, {context:   client});
 
 function create(user) {
-  return findByDeviceId(user.deviceId).then(function(existingUser) {
+  const promise = user.deviceId ? findByDeviceId(user.deviceId) : Promise.resolve(null);
+  return promise.then(function(existingUser) {
     if( existingUser ) { user.id = existingUser.id; }
   }).then(function() {
     return client.put({

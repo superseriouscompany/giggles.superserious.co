@@ -184,11 +184,12 @@ describe("giggles api", function () {
       })
 
       it("notifies the creator", function(done) {
-        let submission, deviceToken;
+        let submission, deviceToken, deviceId;
 
-        factory.user({deviceId: 'abc'}).then(function(u) {
+        factory.user().then(function(u) {
+          deviceId    = u.deviceId;
           deviceToken = u.token;
-          return factory.caption({deviceId: 'abc'})
+          return factory.caption({deviceId: deviceId})
         }).then(function(c) {
           return api.post(`/captions/${c.id}/like?stubPort=3001`);
         }).then(function() {

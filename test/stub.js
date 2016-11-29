@@ -9,7 +9,6 @@ let calls = [];
 app.use(bodyParser.json());
 
 app.use('*', function(req, res) {
-  console.log("Got request", req.originalUrl, req.body)
   const status = req.query.status || 200;
   calls.unshift({url: req.originalUrl, body: req.body});
   if( !req.body || !Object.keys(req.body).length ) { return res.sendStatus(status); }

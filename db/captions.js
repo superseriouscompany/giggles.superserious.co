@@ -58,6 +58,8 @@ function like(id) {
       ':inc': 1,
     },
     ReturnValues: 'ALL_OLD',
+  }).then(function(response) {
+    return response && response.Attributes;
   });
 }
 

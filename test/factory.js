@@ -4,10 +4,15 @@ const UUID = require('node-uuid');
 
 const factory = {
   submission: function(params) {
+    params = Object.assign({
+      deviceId: UUID.v1(),
+    }, params)
+
     return factory.queuedSubmission(params).then(function(s) {
       return api.post({
         url: `/next`,
-        body: { id: s.id }
+        body: { id: s.id },
+        headers: { 'x-device-id': params.deviceId},
       }).then(function() {
         return s;
       })
@@ -32,6 +37,7 @@ const factory = {
     params = Object.assign({
       submissionId: null,
       audio: fs.createReadStream(`${__dirname}/fixtures/lawng.aac`),
+      deviceId: UUID.v1(),
     }, params)
 
     const submissionId = params.submissionId ?
@@ -45,14 +51,17 @@ const factory = {
 
       return api.post({
         url: `/submissions/${submissionId}/captions`,
-        formData: formData
+        formData: formData,
+        headers: {
+          'x-device-id': params.deviceId,
+        }
       }).then(function(r) {
         return Object.assign(r.body, {submissionId: submissionId});
       });
     });
   },
 
-  deviceToken: function(params) {
+  user: function(params) {
     params = Object.assign({
       deviceId: UUID.v1(),
       token:    UUID.v1(),
@@ -64,10 +73,10 @@ const factory = {
         'x-device-id': params.deviceId,
       },
       body: {
-        token: params.deviceToken,
+        token: params.token,
       }
     }).then(function() {
-      return params.token;
+      return params;
     })
   }
 }

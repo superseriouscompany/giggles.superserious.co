@@ -185,11 +185,11 @@ describe("giggles api", function () {
       it("notifies the creator", function(done) {
         let submission, deviceToken;
 
-        factory.deviceToken({deviceId: 'abc'}).then(function(dt) {
-          deviceToken = dt;
+        factory.user({deviceId: 'abc'}).then(function(u) {
+          deviceToken = u.token;
           return factory.caption({deviceId: 'abc'})
         }).then(function(c) {
-          return api.post(`/captions/${caption.id}/like?stubPort=3001`);
+          return api.post(`/captions/${c.id}/like?stubPort=3001`);
         }).then(function() {
           setTimeout(function() {
             const call = stubHandle.calls[0];

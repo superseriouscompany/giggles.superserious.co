@@ -22,3 +22,14 @@ client.createTable(schemas.captions, function(err) {
 
   console.log("Created captions table.");
 })
+
+client.createTable(schemas.users, function(err) {
+  if( err ) {
+    if( err.code == 'ResourceInUseException' ) {
+      return console.log("Users table already exists.");
+    }
+    throw err;
+  }
+
+  console.log("Created users table.");
+})

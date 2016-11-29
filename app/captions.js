@@ -6,6 +6,8 @@ const aacDuration = require('aac-duration');
 const config      = require('../config');
 const db          = require('../db/captions');
 const submissions = require('../db/submissions');
+const users       = require('../db/users');
+const notify      = require('../lib/notify');
 const baseUrl     = config.baseUrl;
 
 const captionUpload = multer({
@@ -62,6 +64,8 @@ function create(req, res, next) {
   }
 
   const uuid = UUID.v1();
+  const deviceId = req.get('x-device-id');
+  let submission;
 
   submissions.get(req.params.id).then(function(s) {
     if( !s ) {
@@ -70,6 +74,8 @@ function create(req, res, next) {
       })
     }
 
+    return deviceId ? users.findByDeviceId(deviceId) : Promise.resolve(null);
+  }).then(function(u) {
     let duration = 42;
     try {
       duration = aacDuration(`./captions/${req.file.filename}`);
@@ -86,6 +92,8 @@ function create(req, res, next) {
       likes: 0,
       hates: 0,
       score: 0,
+      userId: u && u.id,
+      deviceId: u && u.deviceId,
     })
   }).then(function() {
     res.status(201).json({id: uuid});
@@ -93,8 +101,12 @@ function create(req, res, next) {
 }
 
 function like(req, res, next) {
-  db.like(req.params.id).then(function() {
+  db.like(req.params.id).then(function(c) {
     res.sendStatus(204);
+    if( !c || !c.deviceId ) { return; }
+    users.findByDeviceId(c.deviceId).then(function(u) {
+      notify.device(u.token, 'Someone liked your caption. You have value.', !!req.query.stubPort);
+    });
   }).catch(function(err) {
     if( err.message == 'The provided expression refers to an attribute that does not exist in the item' ) {
       return res.status(400).json({message: `caption \`${req.params.id}\` does not exist`})

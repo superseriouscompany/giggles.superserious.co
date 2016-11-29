@@ -115,6 +115,7 @@ function jumpQueueIOS(req, res, next) {
       }
 
       return db.pick(req.params.id).then(function() {
+        notify.topic('all', 'Everything is dumb.', !!req.query.stubPort);
         return res.sendStatus(204);
       })
     })
@@ -159,7 +160,7 @@ function jumpQueueAndroid(req, res, next) {
       if( body.consumptionState !== 1 ) { throw new Error('consumptionState is invalid'); }
 
       return db.pick(req.params.id).then(function() {
-        notify.topic('all', 'Everything is dumb.');
+        notify.topic('all', 'Everything is dumb.', !!req.query.stubPort);
         return res.sendStatus(204);
       })
     }).catch(function(err) {
@@ -180,7 +181,7 @@ function pick(req, res, next) {
     if( !id ) { return res.status(400).json({message: 'Queue empty'}) }
     return db.pick(id);
   }).then(function() {
-    notify.topic('all', 'Everything is dumb.');
+    notify.topic('all', 'Everything is dumb.', !!req.query.stubPort);
     res.sendStatus(204);
   }).catch(next);
 }

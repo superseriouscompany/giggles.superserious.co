@@ -6,7 +6,7 @@ module.exports = Object.assign({
   awsRegion: 'eu-west-1',
   submissionsTableName: 'submissionsStaging',
   captionsTableName: 'captionsStaging',
-  // defaults go here
+  usersTableName: 'usersStaging',
 }, require(`./${environment}`));
 
 AWS.config.update({

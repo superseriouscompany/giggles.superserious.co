@@ -100,4 +100,46 @@ module.exports = {
       }
     ],
   },
+
+  users: {
+    "TableName": config.usersTableName,
+    "AttributeDefinitions":[
+      {
+        "AttributeName":"id",
+        "AttributeType":"S",
+      },
+      {
+        "AttributeName":"deviceId",
+        "AttributeType":"S",
+      }
+    ],
+    "KeySchema":[
+      {
+        "AttributeName":"id",
+        "KeyType":"HASH"
+      }
+    ],
+    "GlobalSecondaryIndexes":[
+      {
+        "IndexName": "deviceId",
+        "KeySchema": [
+          {
+            "AttributeName": "deviceId",
+            "KeyType": "HASH",
+          },
+        ],
+        "Projection": {
+          "ProjectionType": "ALL",
+        },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5,
+        }
+      }
+    ],
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits":5,
+      "WriteCapacityUnits":5
+    },
+  },
 }

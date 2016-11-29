@@ -1,35 +1,28 @@
 'use strict';
 
-const request = require('request-promise'),
-      fs      = require('fs'),
-      expect  = require('expect'),
-      config  = require('../config'),
-      baseUrl = process.env.NODE_ENV == 'production' ? config.baseUrl : 'http://localhost:3000',
-      stub    = require('./stub');
-
-const api = request.defaults({
-  baseUrl: baseUrl,
-  json: true,
-  resolveWithFullResponse: true,
-})
+const fs      = require('fs');
+const expect  = require('expect');
+const stub    = require('./stub');
+const api     = require('./api');
+const factory = require('./factory');
 
 describe("giggles api", function () {
-  this.timeout(10000);
+  this.timeout(10000); // dynamodb latency :eyeroll:
   this.slow(2000);
 
-  let stubClose;
+  let stubHandle;
 
   before(function() {
-    stubClose = stub(3001);
+    stubHandle = stub(3001);
 
     return api('/').catch(function(err) {
-      console.error(`API is not running at ${baseUrl}`);
+      console.error(`API is not running at ${api.baseUrl}`);
       process.exit(1);
     })
   });
 
   after(function() {
-    stubClose();
+    stubHandle();
   });
 
   describe('submission', function() {
@@ -189,6 +182,26 @@ describe("giggles api", function () {
         })
       })
 
+      it("notifies the creator", function(done) {
+        let submission, deviceToken, deviceId;
+
+        factory.user().then(function(u) {
+          deviceId    = u.deviceId;
+          deviceToken = u.token;
+          return factory.caption({deviceId: deviceId})
+        }).then(function(c) {
+          return api.post(`/captions/${c.id}/like?stubPort=3001`);
+        }).then(function() {
+          setTimeout(function() {
+            const call = stubHandle.calls[0];
+            expect(call).toExist();
+            expect(call.body.notification.body).toEqual('Someone liked your caption. You have value.');
+            expect(call.body.to).toEqual(deviceToken);
+            done();
+          }, 1000);
+        }).catch(done);
+      });
+
       it("is reflected on caption", function() {
         let caption;
         return factory.caption().then(function(c) {
@@ -305,6 +318,25 @@ describe("giggles api", function () {
       });
     });
 
+    it("notifies firebase topic on selection", function (done) {
+      factory.queuedSubmission().then(function() {
+        return api.post('/next?stubPort=3001')
+      }).then(function() {
+        // notify is fire and forget so we need to wait for the call to be received
+        setTimeout(function() {
+          const call = stubHandle.calls[0];
+          const expectedTopic = process.env.NODE_ENV == 'production' ?
+            '/topics/all' : '/topics/allStaging';
+          expect(call).toExist();
+          expect(call.url).toEqual('/fcm/send');
+          expect(call.body.to).toEqual(expectedTopic);
+          expect(call.body.priority).toEqual('high');
+          expect(call.body.notification.body).toEqual('Everything is dumb.');
+          done();
+        }, 100);
+      }).catch(done);
+    });
+
     it("selects an image with the given ID", function() {
       let submission;
       return factory.queuedSubmission().then(function(s) {
@@ -323,19 +355,39 @@ describe("giggles api", function () {
     });
   });
 
-  describe("registering push tokens", function() {
+  describe("user creation", function() {
     describe("iOS", function() {
-      it("204s blindly", function () {
-        return api.post(`/ios/pushTokens`).then(function(r) {
-          expect(r.statusCode).toEqual(204);
+      it("400s if token is not provided", function () {
+        return api.post(`/ios/pushTokens`).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/token/);
+        })
+      });
+
+      it("201s with id", function () {
+        return api.post(`/ios/pushTokens`, {
+          body: { token: 'abc123' },
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(201);
+          expect(r.body.id).toExist();
         })
       });
     })
 
     describe("Android", function() {
-      it("204s blindly", function () {
-        return api.post(`/android/pushTokens`).then(function(r) {
-          expect(r.statusCode).toEqual(204);
+      it("400s if token is not provided", function () {
+        return api.post(`/android/pushTokens`).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/token/);
+        })
+      });
+
+      it("201s with id", function () {
+        return api.post(`/android/pushTokens`, {
+          body: { token: 'def456' },
+        }).then(function(r) {
+          expect(r.statusCode).toEqual(201);
+          expect(r.body.id).toExist();
         })
       });
     })
@@ -492,58 +544,6 @@ describe("giggles api", function () {
     });
   });
 });
-
-const factory = {
-  submission: function(params) {
-    return factory.queuedSubmission(params).then(function(s) {
-      return api.post({
-        url: `/next`,
-        body: { id: s.id }
-      }).then(function() {
-        return s;
-      })
-    });
-  },
-
-  queuedSubmission: function(params) {
-    params = Object.assign({
-      photo: fs.createReadStream(__dirname + '/fixtures/photo.jpg'),
-    }, params);
-
-    const formData = {
-      photo: params.photo,
-    }
-
-    return api.post({url: '/submissions', formData: formData}).then(function(s) {
-      return s.body
-    });
-  },
-
-  caption: function(params) {
-    // TODO: allow adding caption to existing submission
-    params = Object.assign({
-      submissionId: null,
-      audio: fs.createReadStream(`${__dirname}/fixtures/lawng.aac`),
-    }, params)
-
-    const submissionId = params.submissionId ?
-      Promise.resolve(params.submissionId) :
-      factory.submission().then(function(s) { return s.id });
-
-    return submissionId.then(function(submissionId) {
-      const formData = {
-        audio: params.audio
-      }
-
-      return api.post({
-        url: `/submissions/${submissionId}/captions`,
-        formData: formData
-      }).then(function(r) {
-        return Object.assign(r.body, {submissionId: submissionId});
-      });
-    });
-  }
-}
 
 function shouldFail(r) {
   let err;

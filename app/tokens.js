@@ -9,6 +9,10 @@ module.exports = function(app) {
 }
 
 function iOSRegisterToken(req, res, next) {
+  if( !req.body.token ) {
+    return res.status(400).json({message: 'Please supply a firebase token'});
+  }
+
   const uuid = UUID.v1();
 
   db.create({
@@ -22,6 +26,10 @@ function iOSRegisterToken(req, res, next) {
 }
 
 function androidRegisterToken(req, res, next) {
+  if( !req.body.token ) {
+    return res.status(400).json({message: 'Please supply a firebase token'});
+  }
+
   const uuid = UUID.v1();
 
   db.create({

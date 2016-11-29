@@ -355,8 +355,15 @@ describe("giggles api", function () {
     });
   });
 
-  describe("registering push tokens", function() {
+  describe("user creation", function() {
     describe("iOS", function() {
+      it("400s if token is not provided", function () {
+        return api.post(`/ios/pushTokens`).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/token/);
+        })
+      });
+
       it("201s with id", function () {
         return api.post(`/ios/pushTokens`, {
           body: { token: 'abc123' },
@@ -368,6 +375,13 @@ describe("giggles api", function () {
     })
 
     describe("Android", function() {
+      it("400s if token is not provided", function () {
+        return api.post(`/android/pushTokens`).then(shouldFail).catch(function(err) {
+          expect(err.statusCode).toEqual(400);
+          expect(err.response.body).toMatch(/token/);
+        })
+      });
+
       it("201s with id", function () {
         return api.post(`/android/pushTokens`, {
           body: { token: 'def456' },

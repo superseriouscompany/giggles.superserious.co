@@ -22,7 +22,6 @@ describe("giggles api", function () {
   });
 
   after(function() {
-    console.log("shutting down stub server");
     stubHandle();
   });
 
@@ -326,9 +325,11 @@ describe("giggles api", function () {
         // notify is fire and forget so we need to wait for the call to be received
         setTimeout(function() {
           const call = stubHandle.calls[0];
+          const expectedTopic = process.env.NODE_ENV == 'production' ?
+            '/topics/all' : '/topics/allStaging';
           expect(call).toExist();
           expect(call.url).toEqual('/fcm/send');
-          expect(call.body.to).toEqual('/topics/all');
+          expect(call.body.to).toEqual(expectedTopic);
           expect(call.body.priority).toEqual('high');
           expect(call.body.notification.body).toEqual('Everything is dumb.');
           done();

@@ -19,7 +19,6 @@ app.use('*', function(req, res) {
 
 module.exports = function(port) {
   const server = app.listen(port);
-  console.log("listening on port", port);
   let handle   = server.close.bind(server);
   handle.calls = calls;
   return handle;

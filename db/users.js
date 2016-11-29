@@ -26,6 +26,8 @@ function create(user) {
 }
 
 function findByDeviceId(deviceId) {
+  if( !deviceId ) { console.warn("Empty deviceId"); return Promise.resolve(null); }
+
   return client.query({
     TableName: tableName,
     IndexName: 'deviceId',

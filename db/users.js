@@ -14,10 +14,14 @@ client.query = promisify(client.query, {context: client});
 client.get   = promisify(client.get, {context:   client});
 
 function create(user) {
-  return client.put({
-    TableName: tableName,
-    Item: user
-  });
+  return findByDeviceId(user.deviceId).then(function(existingUser) {
+    if( existingUser ) { user.id = existingUser.id; }
+  }).then(function() {
+    return client.put({
+      TableName: tableName,
+      Item: user
+    });
+  })
 }
 
 function findByDeviceId(deviceId) {

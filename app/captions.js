@@ -87,7 +87,7 @@ function create(req, res, next) {
     }
 
     var key = req.file.filename;
-    var params = {Bucket: config.captionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read'}
+    var params = {Bucket: config.captionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read', ContentType: req.file.mimetype}
 
     s3.upload(params, function(err, s3Payload) {
       return db.create({

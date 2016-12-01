@@ -63,7 +63,8 @@ function create(req, res, next) {
   const dimensions = sizeOf(filePath);
 
   var key = req.file.filename;
-  var params = {Bucket: config.submissionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read'}
+
+  var params = {Bucket: config.submissionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read', ContentType: req.file.mimetype}
   s3.upload(params, function(err, s3Payload) {
     if( err ) { return next(err); }
     if( !s3Payload || !s3Payload.Location ) { return next(new Error(`s3 returned no url ${JSON.stringify(s3Payload)}`)); }

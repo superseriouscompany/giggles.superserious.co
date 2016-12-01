@@ -3,8 +3,8 @@
 # henoku sets up a heroku-like deploy environment for nodejs
 #
 #
-HOST=${HOST:-test.superserious.co}
-REPO_NAME=${REPO_NAME:-app}
+HOST=${HOST:-giggles.superserious.co}
+REPO_NAME=${REPO_NAME:-giggles.superserious.co}
 RUN_COMMAND=${RUN_COMMAND:-/usr/bin/npm start}
 ROOT=${ROOT:-ubuntu}
 ROOT_HOME=${ROOT_HOME:-/home/ubuntu}

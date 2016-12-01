@@ -5,11 +5,13 @@ const request     = require('request-promise');
 const IAPVerifier = require('iap_verifier');
 const sizeOf      = require('image-size');
 const UUID        = require('node-uuid');
+const fs          = require('fs');
 const config      = require('../config');
 const db          = require('../db/submissions');
 const notify      = require('../lib/notify');
 const iapClient   = new IAPVerifier();
 const baseUrl     = config.baseUrl;
+const s3          = new config.AWS.S3();
 
 let upload = multer({
   limits: {fileSize: 1024 * 1024 * 2},
@@ -57,24 +59,31 @@ function create(req, res, next) {
     });
   }
 
-  const dimensions = sizeOf(`./submissions/${req.file.filename}`);
+  const filePath = `./submissions/${req.file.filename}`;
+  const dimensions = sizeOf(filePath);
 
-  return db.create({
-    id: uuid,
-    filename: req.file.filename,
-    width: dimensions.width,
-    height: dimensions.height,
-    image_url: `${baseUrl}/${req.file.filename}`,
-    isPublished: 'no',
-    publishedAt: 0,
-  }).then(function() {
-    return db.count().then(function(queueSize) {
-      res.status(201).json({id: uuid, queueSize: queueSize || 69});
-    }).catch(function(err) {
-      console.warn(err, err.stack);
-      res.status(201).json({id: uuid, queueSize: 69});
-    })
-  }).catch(next);
+  var key = req.file.filename;
+  var params = {Bucket: config.submissionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read'}
+  s3.upload(params, function(err, s3Payload) {
+    if( err ) { return next(err); }
+    if( !s3Payload || !s3Payload.Location ) { return next(new Error(`s3 returned no url ${JSON.stringify(s3Payload)}`)); }
+
+    return db.create({
+      id: uuid,
+      width: dimensions.width,
+      height: dimensions.height,
+      image_url: s3Payload.Location,
+      isPublished: 'no',
+      publishedAt: 0,
+    }).then(function() {
+      return db.count().then(function(queueSize) {
+        res.status(201).json({id: uuid, queueSize: queueSize || 69});
+      }).catch(function(err) {
+        console.warn(err, err.stack);
+        res.status(201).json({id: uuid, queueSize: 69});
+      })
+    }).catch(next);
+  })
 }
 
 function jumpQueueIOS(req, res, next) {

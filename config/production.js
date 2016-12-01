@@ -4,4 +4,6 @@ module.exports = {
   submissionsTableName: 'submissions',
   captionsTableName: 'captions',
   usersTableName: 'users',
+  submissionsBucket: 'giggles-production-submissions',
+  captionsBucket: 'giggles-production-captions',
 }

@@ -3,12 +3,14 @@
 const multer      = require('multer');
 const UUID        = require('node-uuid');
 const aacDuration = require('aac-duration');
+const fs          = require('fs');
 const config      = require('../config');
 const db          = require('../db/captions');
 const submissions = require('../db/submissions');
 const users       = require('../db/users');
 const notify      = require('../lib/notify');
 const baseUrl     = config.baseUrl;
+const s3          = new config.AWS.S3();
 
 const captionUpload = multer({
   limits: {fileSize: 1024 * 1024 * 2},
@@ -77,26 +79,32 @@ function create(req, res, next) {
     return deviceId ? users.findByDeviceId(deviceId) : Promise.resolve(null);
   }).then(function(u) {
     let duration = 42;
+    const filePath = `./captions/${req.file.filename}`;
     try {
-      duration = aacDuration(`./captions/${req.file.filename}`);
+      duration = aacDuration(filePath);
     } catch(err) {
       console.error(err, "unable to convert", uuid);
     }
 
-    return db.create({
-      id: uuid,
-      filename: req.file.filename,
-      submissionId: req.params.id,
-      duration: duration,
-      audio_url: `${baseUrl}/${req.file.filename}`,
-      likes: 0,
-      hates: 0,
-      score: 0,
-      userId: u && u.id,
-      deviceId: u && u.deviceId,
-    })
-  }).then(function() {
-    res.status(201).json({id: uuid});
+    var key = req.file.filename;
+    var params = {Bucket: config.captionsBucket, Key: key, Body: fs.createReadStream(filePath), ACL: 'public-read'}
+
+    s3.upload(params, function(err, s3Payload) {
+      return db.create({
+        id: uuid,
+        filename: req.file.filename,
+        submissionId: req.params.id,
+        duration: duration,
+        audio_url: `${baseUrl}/${req.file.filename}`,
+        likes: 0,
+        hates: 0,
+        score: 0,
+        userId: u && u.id,
+        deviceId: u && u.deviceId,
+      }).then(function() {
+        res.status(201).json({id: uuid})
+      }).catch(next);
+    });
   }).catch(next);
 }
 

@@ -1,6 +1,6 @@
 const fs   = require('fs');
 const api  = require('./api');
-const UUID = require('node-uuid');
+const UUID = require('uuid');
 
 const factory = {
   submission: function(params) {

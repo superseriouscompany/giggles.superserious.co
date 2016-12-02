@@ -1,7 +1,7 @@
 'use strict';
 
 const multer      = require('multer');
-const UUID        = require('node-uuid');
+const UUID        = require('uuid');
 const aacDuration = require('aac-duration');
 const fs          = require('fs');
 const config      = require('../config');

@@ -1,7 +1,7 @@
 'use strict';
 
 const db   = require('../db/users');
-const UUID = require('node-uuid');
+const UUID = require('uuid');
 
 module.exports = function(app) {
   app.post('/ios/pushTokens', iOSRegisterToken);

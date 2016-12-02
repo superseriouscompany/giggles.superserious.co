@@ -23,7 +23,7 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "image-size": "^0.5.0",
-    "iap_verifier": "git@github.com:superseriouscompany/iap_verifier.git",
+    "iap_verifier": "https://github.com/superseriouscompany/iap_verifier.git",
     "multer": "^1.2.0",
     "request": "^2.75.0",
     "request-promise": "^4.1.1",

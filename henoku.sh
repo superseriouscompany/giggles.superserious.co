@@ -41,8 +41,7 @@ ssh "$ROOT"@"$HOST" sudo ufw enable -y
 # Install nodejs
 echo "Installing nodejs..."
 ssh "$ROOT"@"$HOST" sudo apt-get install -y nodejs
-# FIXME: this isn't working for some reason
-ssh "$ROOT"@"$HOST" sudo ln -s "$(which nodejs)" /usr/bin/node
+ssh "$ROOT"@"$HOST" sudo ln -s /usr/bin/nodejs /usr/bin/node
 ssh "$ROOT"@"$HOST" sudo apt-get install -y npm
 
 # Install nginx

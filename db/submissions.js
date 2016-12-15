@@ -72,6 +72,10 @@ function get(id) {
 function unpicked() {
   return client.scan({
     TableName: tableName,
+    FilterExpression: 'isPublished = :isPublished',
+    ExpressionAttributeValues: {
+      ':isPublished': 'no',
+    },
   }).then(function(payload) {
     return payload && payload.Items;
   }).then(function(submissions) {
